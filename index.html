@@ -1,0 +1,1435 @@
+<title>Damages &amp; Claims Log</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap">
+<style>
+/* Layout: sticky header with section tabs (same family as the Driver Pay Log, DPD P&L Tracker and EV Charging Log); dashboard = controls, tiles, breakdown tables; logging = form beside the live working-out. */
+:root {
+  --bg: #f2f3f6;
+  --surface: #ffffff;
+  --sunk: #e9ecf2;
+  --ink: #161b26;
+  --muted: #5b6375;
+  --line: #d9dee7;
+  --accent: #9f1239;
+  --accent-ink: #ffffff;
+  --van: #e3e9f6;
+  --van-ink: #23407a;
+  --parcel: #fbecd6;
+  --parcel-ink: #7a4508;
+  --third: #efe4f7;
+  --third-ink: #5d2a86;
+  --fine: #e4eef0;
+  --fine-ink: #1d5560;
+  --warn: #8a5300;
+  --warn-bg: #fdf0d5;
+  --good: #17703f;
+  --good-bg: #e2f3e9;
+  --bad: #b42318;
+  --bad-bg: #fbe4e1;
+  --hl: #fbeaef;
+  --font-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --font-body: "Barlow", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1218; --surface: #171b24; --sunk: #1f2430; --ink: #e9ecf3; --muted: #9aa3b5; --line: #2a3140;
+    --accent: #fb7193; --accent-ink: #2a0610; --van: #1f2a42; --van-ink: #a9c1f2; --parcel: #3a2a14; --parcel-ink: #ffcf8a;
+    --third: #2e2140; --third-ink: #d9b6f5; --fine: #16302f; --fine-ink: #9fdde3; --warn: #ffc56b; --warn-bg: #3a2c12;
+    --good: #52c98a; --good-bg: #16301f; --bad: #ff6e61; --bad-bg: #3a1a17; --hl: #3a1622; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1218; --surface: #171b24; --sunk: #1f2430; --ink: #e9ecf3; --muted: #9aa3b5; --line: #2a3140;
+  --accent: #fb7193; --accent-ink: #2a0610; --van: #1f2a42; --van-ink: #a9c1f2; --parcel: #3a2a14; --parcel-ink: #ffcf8a;
+  --third: #2e2140; --third-ink: #d9b6f5; --fine: #16302f; --fine-ink: #9fdde3; --warn: #ffc56b; --warn-bg: #3a2c12;
+  --good: #52c98a; --good-bg: #16301f; --bad: #ff6e61; --bad-bg: #3a1a17; --hl: #3a1622; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.45; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+td, .tile b, .num { font-variant-numeric: tabular-nums; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 700; margin: 0; text-wrap: balance; letter-spacing: .01em; }
+.eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); font-weight: 600; }
+.note { font-size: 13px; color: var(--muted); margin: 0; }
+a { color: var(--accent); }
+
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 6px 20px; padding-block: 12px 0; }
+.top h1 { font-size: 26px; text-transform: uppercase; }
+.top h1 span { color: var(--accent); }
+.sub { margin: 0; color: var(--muted); font-size: 13px; }
+.brand { padding-bottom: 10px; min-width: 0; }
+.nav { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+.nav button { font: inherit; font-weight: 600; background: none; border: 0; border-bottom: 3px solid transparent; padding: 8px 12px 10px; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.nav button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+
+main.wrap { padding-block: 18px 40px; }
+.panel { display: grid; gap: 16px; min-width: 0; }
+.banner { padding: 10px 14px; border-radius: var(--radius); background: var(--bad-bg); color: var(--bad); font-weight: 500; margin-bottom: 16px; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; min-width: 0; }
+.card > h2 { font-size: 21px; margin-bottom: 4px; }
+.controls { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: end; }
+label { display: grid; gap: 4px; font-size: 13px; font-weight: 600; color: var(--muted); }
+label .opt { font-weight: 500; }
+input[type=text], input[type=number], input[type=date], input[type=url], input[type=email], select, textarea {
+  width: 100%; font: inherit; font-size: 16px; color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-width: 0;
+}
+textarea { resize: vertical; min-height: 64px; }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input:disabled, select:disabled { opacity: .55; }
+.grow { flex: 1 1 220px; }
+
+.seg { display: inline-flex; background: var(--sunk); border-radius: 10px; padding: 4px; gap: 2px; max-width: 100%; overflow-x: auto; }
+.seg button { font: inherit; font-weight: 600; border: 0; border-radius: 7px; padding: 8px 12px; background: none; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.radios { display: grid; grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.radios input { position: absolute; opacity: 0; pointer-events: none; }
+.radios label { display: block; text-align: center; padding: 9px 4px; cursor: pointer; color: var(--ink); background: var(--bg); font-weight: 500; font-size: 14px; }
+.radios label + input + label { border-left: 1px solid var(--line); }
+.radios input:checked + label { background: var(--ink); color: var(--surface); }
+.radios input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: -2px; }
+.radios input:disabled + label { opacity: .5; cursor: not-allowed; }
+.datenav { display: flex; gap: 6px; align-items: center; }
+.datenav input { width: auto; }
+.iconbtn { width: 40px; height: 40px; flex: none; border-radius: 50%; border: 1px solid var(--line); background: var(--sunk); color: var(--ink); font-size: 20px; cursor: pointer; line-height: 1; }
+.iconbtn:hover { border-color: var(--accent); }
+.btn { font: inherit; font-weight: 600; border-radius: 8px; padding: 9px 16px; cursor: pointer; border: 1px solid var(--line); background: var(--sunk); color: var(--ink); white-space: nowrap; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.mini { font: inherit; font-size: 12px; font-weight: 600; padding: 4px 9px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.mini.armed { background: var(--bad); border-color: var(--bad); color: #fff; }
+.rowbtns { display: flex; gap: 6px; justify-content: flex-end; }
+.msg { min-height: 1.2em; font-size: 13px; color: var(--muted); margin: 0; }
+.msg.err { color: var(--bad); }
+.msg.ok { color: var(--good); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+.rangeline { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px 16px; }
+.rangeline h2 { font-size: 24px; }
+.rangeline h2 small { font-family: var(--font-body); font-size: 14px; font-weight: 500; color: var(--muted); letter-spacing: 0; }
+
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; display: grid; gap: 2px; align-content: start; min-width: 0; }
+.tile b { font-family: var(--font-display); font-size: 26px; font-weight: 600; }
+.tile small { color: var(--muted); font-size: 12px; }
+.tile.main { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.tile.main .eyebrow, .tile.main small { color: inherit; opacity: .85; }
+.tile.minus b { color: var(--bad); }
+.tile.plus b { color: var(--good); }
+.tile.warn { background: var(--warn-bg); border-color: transparent; }
+.tile.warn b { color: var(--warn); }
+
+.block { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; min-width: 0; }
+.block-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 14px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.block-head h3 { font-size: 20px; }
+.block-head .meta { font-size: 13px; color: var(--muted); }
+.block-foot { padding: 10px 14px; border-top: 1px solid var(--line); }
+.scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: right; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; padding: 8px 12px; background: var(--sunk); white-space: nowrap; }
+td { padding: 8px 12px; border-top: 1px solid var(--line); white-space: nowrap; text-align: right; vertical-align: top; }
+th.l, td.l { text-align: left; }
+th:first-child, td:first-child { position: sticky; left: 0; z-index: 1; }
+td:first-child { background: var(--surface); }
+tfoot td { font-weight: 600; background: var(--sunk); }
+tr.click { cursor: pointer; }
+tr.click:hover td, tr.sel td { background: var(--hl); }
+tr.dim td { color: var(--muted); }
+tr.sub td { border-top: 0; padding-top: 2px; font-size: 13px; color: var(--muted); }
+td.neg, .neg { color: var(--bad); font-weight: 600; }
+td.pos, .pos { color: var(--good); font-weight: 600; }
+td.wrapcell { white-space: normal; min-width: 240px; color: var(--muted); text-align: left; }
+.name { font-weight: 600; }
+.email { color: var(--muted); font-size: 12px; }
+.small { color: var(--muted); font-size: 12px; }
+.chip { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--sunk); color: var(--muted); white-space: nowrap; }
+.chip.van { background: var(--van); color: var(--van-ink); }
+.chip.lost, .chip.pdamaged { background: var(--parcel); color: var(--parcel-ink); }
+.chip.third { background: var(--third); color: var(--third-ink); }
+.chip.fine { background: var(--fine); color: var(--fine-ink); }
+.chip.bad { background: var(--bad-bg); color: var(--bad); }
+.chip.warn { background: var(--warn-bg); color: var(--warn); }
+.chip.ok { background: var(--good-bg); color: var(--good); }
+.chips { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.empty { padding: 26px 18px; text-align: center; color: var(--muted); }
+.empty h3 { color: var(--ink); font-size: 20px; margin-bottom: 4px; }
+
+.cols { display: grid; grid-template-columns: 420px minmax(0, 1fr); gap: 16px; align-items: start; }
+.side { display: grid; gap: 14px; min-width: 0; }
+.stack { display: grid; gap: 14px; min-width: 0; }
+.form { display: grid; gap: 12px; }
+.form fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 12px; }
+.form legend { font-family: var(--font-display); font-weight: 700; font-size: 19px; padding: 0; margin-bottom: 8px; }
+.form hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; width: 100%; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.preview { background: var(--sunk); border-radius: 8px; padding: 10px 12px; font-size: 14px; display: grid; gap: 4px; }
+.preview b { font-size: 16px; }
+.preview .line { display: flex; justify-content: space-between; gap: 10px; }
+.check { display: flex; align-items: center; gap: 8px; color: var(--ink); font-weight: 500; font-size: 14px; }
+.check input { width: 18px; height: 18px; accent-color: var(--accent); }
+.formgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 12px; }
+.rulebox { display: grid; gap: 6px; background: var(--sunk); border-radius: 8px; padding: 12px 14px; font-size: 14px; }
+.rulebox p { margin: 0; }
+.flag { display: flex; gap: 8px; align-items: start; padding: 10px 12px; border-radius: 8px; background: var(--bad-bg); color: var(--bad); font-size: 14px; font-weight: 500; }
+.flag.warn { background: var(--warn-bg); color: var(--warn); }
+.dl { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 10px 16px; }
+.dl div { display: grid; gap: 1px; min-width: 0; }
+.dl span { font-size: 12px; color: var(--muted); font-weight: 600; }
+.dl b { font-weight: 500; overflow-wrap: anywhere; }
+
+@media (max-width: 1000px) { .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 900px) { .cols { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 560px) {
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .top h1 { font-size: 22px; }
+  .seg button { padding: 8px 9px; }
+  .tile b { font-size: 22px; }
+  .row2 { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+
+<header class="top"><div class="wrap">
+  <div class="brand">
+    <h1>Damages <span>&amp; Claims</span> Log</h1>
+    <p class="sub" id="ruleLine">Van damage, parcel claims, third-party damage and fines · deductions feed the Driver Pay Log each 4-week pay period</p>
+  </div>
+  <nav class="nav" role="tablist" aria-label="Sections">
+    <button role="tab" type="button" data-tab="dashboard" aria-selected="true">Dashboard</button>
+    <button role="tab" type="button" data-tab="log" aria-selected="false">Log a claim</button>
+    <button role="tab" type="button" data-tab="wages" aria-selected="false">Pay period deductions</button>
+    <button role="tab" type="button" data-tab="claims" aria-selected="false">All claims</button>
+    <button role="tab" type="button" data-tab="settings" aria-selected="false">FDs, drivers &amp; rules</button>
+  </nav>
+</div></header>
+
+<main class="wrap">
+  <div id="banner" class="banner" hidden></div>
+
+  <!-- DASHBOARD -->
+  <section class="panel" id="tab-dashboard">
+    <div class="card controls">
+      <div class="seg" id="statusSeg" role="group" aria-label="Claim status">
+        <button type="button" data-status="open" aria-pressed="false">Open claims</button>
+        <button type="button" data-status="all" aria-pressed="true">All claims</button>
+        <button type="button" data-status="closed" aria-pressed="false">Closed</button>
+      </div>
+      <label class="grow" for="scopeSel">Showing<select id="scopeSel"></select></label>
+    </div>
+
+    <div class="rangeline">
+      <h2 id="rangeTitle">–</h2>
+      <div class="actions">
+        <button class="btn" type="button" id="exportReportBtn">Download report (CSV)</button>
+        <p class="msg" id="dashMsg" role="status"></p>
+      </div>
+    </div>
+
+    <div id="dashEmpty" hidden></div>
+    <section class="tiles" id="kpis" aria-label="Totals"></section>
+
+    <article class="block" id="attnBlock" hidden>
+      <div class="block-head"><h3>Needs attention</h3><span class="meta">Deductions with no signed agreement, open disputes and refunds owed.</span></div>
+      <div class="scroll"><table id="attnTable"></table></div>
+    </article>
+    <article class="block">
+      <div class="block-head"><h3>By driver</h3><span class="meta">Tap a driver to see only their claims.</span></div>
+      <div class="scroll"><table id="driverTable"></table></div>
+    </article>
+    <article class="block">
+      <div class="block-head"><h3>By van</h3><span class="meta">Tap a van reg to filter.</span></div>
+      <div class="scroll"><table id="vanTable"></table></div>
+    </article>
+    <article class="block">
+      <div class="block-head"><h3>By FD</h3><span class="meta">The FD and email each charge is linked to. Tap one to filter.</span></div>
+      <div class="scroll"><table id="fdTable"></table></div>
+    </article>
+    <article class="block">
+      <div class="block-head"><h3>By depot</h3><span class="meta">Tap a depot to filter.</span></div>
+      <div class="scroll"><table id="depotTable"></table></div>
+    </article>
+    <article class="block">
+      <div class="block-head"><h3>By type</h3><span class="meta">Van damage, parcels, third party and fines side by side.</span></div>
+      <div class="scroll"><table id="typeTable"></table></div>
+    </article>
+    <article class="block">
+      <div class="block-head"><h3 id="dClaimsTitle">Claims</h3><span class="meta">Tap a claim to open it.</span></div>
+      <div class="scroll"><table id="dClaims"></table></div>
+    </article>
+  </section>
+
+  <!-- LOG -->
+  <section class="panel" id="tab-log" hidden>
+    <div class="cols">
+      <div class="side">
+        <section class="card">
+          <form id="claimForm" class="form" novalidate>
+            <h2 id="formTitle" style="font-size:22px">Log a claim</h2>
+
+            <fieldset>
+              <legend>Incident</legend>
+              <div class="row2">
+                <label for="fIncident">Date of incident *<input type="date" id="fIncident"></label>
+                <label for="fReported">Date reported *<input type="date" id="fReported"></label>
+              </div>
+              <label for="fType">Type *<select id="fType">
+                <option value="van">Van damage</option>
+                <option value="lost">Parcel lost</option>
+                <option value="pdamaged">Parcel damaged</option>
+                <option value="third">Third-party damage</option>
+                <option value="fine">Fine or PCN</option>
+              </select></label>
+              <label for="fDriver">Driver *<select id="fDriver"></select></label>
+              <label for="fFd">FD (the charge is linked to) *<select id="fFd"></select></label>
+              <p class="note" id="fdLine">Depot comes from the FD.</p>
+              <div class="row2">
+                <label for="fRoute">Route <span class="opt">(if known)</span><input type="text" id="fRoute" list="dlRoutes" autocomplete="off" placeholder="e.g. 412"></label>
+                <label for="fVan">Van reg <span class="opt">(if any)</span><input type="text" id="fVan" list="dlVans" autocomplete="off" placeholder="e.g. AB12 CDE" style="text-transform:uppercase"></label>
+              </div>
+              <div class="row2">
+                <label for="fRef">DPD claim ref <span class="opt">(if any)</span><input type="text" id="fRef" autocomplete="off"></label>
+                <label for="fTrack">Parcel tracking no. <span class="opt">(if any)</span><input type="text" id="fTrack" autocomplete="off" inputmode="numeric"></label>
+              </div>
+              <label for="fDesc">Short description *<textarea id="fDesc" rows="2" placeholder="e.g. Nearside mirror clipped on gatepost at drop 42"></textarea></label>
+              <label for="fLink">Photos / evidence link <span class="opt">(optional)</span><input type="url" id="fLink" autocomplete="off" placeholder="https://… (Google Drive, OneDrive, WhatsApp album…)"></label>
+            </fieldset>
+            <hr>
+
+            <fieldset>
+              <legend>Cost and who pays</legend>
+              <label for="fTotal">Total amount charged (£) *<input type="number" id="fTotal" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 450.00"></label>
+              <label class="check" for="fInsured"><input type="checkbox" id="fInsured"> Going through insurance</label>
+              <label for="fExcess" id="excessWrap" hidden>Insurance excess (£)<input type="number" id="fExcess" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 250.00"></label>
+              <label for="fShare">Driver's share (£)<input type="number" id="fShare" min="0" step="0.01" inputmode="decimal" placeholder="0.00 if the business covers it all"></label>
+              <label class="check" for="fSigned"><input type="checkbox" id="fSigned"> Driver has signed an agreement to the deduction</label>
+            </fieldset>
+            <hr>
+
+            <fieldset id="payFs">
+              <legend>Paying back the driver's share</legend>
+              <div class="radios" role="radiogroup" aria-label="Payment" style="--n:2">
+                <input type="radio" name="pay" id="pFull" value="full" checked><label for="pFull">In full</label>
+                <input type="radio" name="pay" id="pPlan" value="plan"><label for="pPlan">Payment plan</label>
+              </div>
+              <div class="row2" id="planRow" hidden>
+                <label for="fN">Instalments<input type="number" id="fN" min="1" step="1" inputmode="numeric" placeholder="e.g. 4"></label>
+                <label for="fPer">Amount per pay period (£)<input type="number" id="fPer" min="0" step="0.01" inputmode="decimal"></label>
+              </div>
+              <div class="row2">
+                <label for="fStart">First deduction (pay period)<input type="date" id="fStart"></label>
+                <label for="fPaidBefore">Already paid back (£) <span class="opt">(before this log)</span><input type="number" id="fPaidBefore" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+              </div>
+              <p class="note" id="startNote"></p>
+            </fieldset>
+            <hr>
+
+            <fieldset>
+              <legend>Dispute</legend>
+              <label class="check" for="fDisputed"><input type="checkbox" id="fDisputed"> Disputed</label>
+              <div id="disputeBox" class="form" hidden>
+                <label for="fDispWith">Disputed by<select id="fDispWith">
+                  <option value="dpd">Us, with DPD / third party / issuer (won = charge cancelled)</option>
+                  <option value="driver">The driver, against their share (won = business covers it)</option>
+                </select></label>
+                <label for="fDispRaised">Date dispute raised *<input type="date" id="fDispRaised"></label>
+                <div class="radios" role="radiogroup" aria-label="Dispute status" style="--n:3">
+                  <input type="radio" name="dstat" id="dOpen" value="open" checked><label for="dOpen">Open</label>
+                  <input type="radio" name="dstat" id="dWon" value="won"><label for="dWon">Won</label>
+                  <input type="radio" name="dstat" id="dLost" value="lost"><label for="dLost">Lost</label>
+                </div>
+                <label for="fOutcome" id="outcomeWrap" hidden>Outcome date *<input type="date" id="fOutcome"></label>
+                <label for="fDispNotes">Dispute notes<textarea id="fDispNotes" rows="2"></textarea></label>
+              </div>
+            </fieldset>
+
+            <div class="actions">
+              <button class="btn primary" type="submit" id="saveBtn" style="flex:1">Save claim</button>
+              <button class="btn" type="button" id="cancelEdit" hidden>Cancel edit</button>
+            </div>
+            <p class="msg" id="formMsg" role="status"></p>
+          </form>
+        </section>
+        <datalist id="dlRoutes"></datalist>
+        <datalist id="dlVans"></datalist>
+      </div>
+
+      <div class="stack">
+        <article class="block">
+          <div class="block-head"><h3>How this claim works out</h3><span class="meta">Updates as you type.</span></div>
+          <div style="padding:14px" id="preview"></div>
+        </article>
+        <article class="block">
+          <div class="block-head"><h3>Deduction schedule</h3><span class="meta">One line per 4-week pay period.</span></div>
+          <div class="scroll"><table id="previewSched"></table></div>
+        </article>
+        <article class="block">
+          <div class="block-head"><h3>Recently logged</h3><span class="meta">Last 10 by date reported.</span></div>
+          <div class="scroll"><table id="recentTable"></table></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAY PERIOD -->
+  <section class="panel" id="tab-wages" hidden>
+    <div class="card controls">
+      <div class="datenav">
+        <button class="iconbtn" type="button" id="wPrev" aria-label="Previous pay period">‹</button>
+        <div><span class="eyebrow">4-week pay period</span><h2 id="wTitle" style="font-size:21px">–</h2></div>
+        <button class="iconbtn" type="button" id="wNext" aria-label="Next pay period">›</button>
+        <button class="btn" type="button" id="wToday">This period</button>
+      </div>
+      <label class="grow" for="wScope">Showing<select id="wScope"></select></label>
+      <div class="actions" style="justify-content:flex-end">
+        <button class="btn primary" type="button" id="wExportWages">Download for Driver Pay Log</button>
+        <button class="btn" type="button" id="wExportPnl">Download for P&amp;L</button>
+        <button class="btn" type="button" id="wCopy">Copy summary</button>
+      </div>
+    </div>
+    <p class="msg" id="wMsg" role="status"></p>
+    <section class="tiles" id="wTiles" aria-label="Pay period totals"></section>
+    <article class="block">
+      <div class="block-head"><h3>Per driver for this pay period</h3><span class="meta" id="wMeta"></span></div>
+      <div class="scroll"><table id="wTable"></table></div>
+    </article>
+    <article class="block">
+      <div class="block-head"><h3>Every claim line this pay period</h3><span class="meta">Deductions taken, paused and refunded, and why.</span></div>
+      <div class="scroll"><table id="wLines"></table></div>
+    </article>
+    <article class="block">
+      <div class="block-head"><h3>Pay period by pay period</h3><span class="meta">The last 13 periods up to this one. Tap a row to open it.</span></div>
+      <div class="scroll"><table id="wTrend"></table></div>
+    </article>
+    <div class="card">
+      <h2>Getting these figures into wages and the P&amp;L</h2>
+      <div class="note" style="display:grid;gap:6px;margin-top:6px">
+        <p><b>Driver Pay Log:</b> “Download for Driver Pay Log” gives one line per claim deducted this pay period, dated the last day of the period. Fines and PCNs come through as <i>Parking ticket</i>; van, parcel and third-party claims as <i>Van damage</i> (the note says which). Refunds after a won dispute come through as <i>Top up</i>. Driver names here must match the pay log.</p>
+        <p><b>P&amp;L Tracker:</b> “Download for P&amp;L” gives the cost the business absorbs on every claim whose incident date falls in this pay period, by FD, email and depot. Put it in the <i>Van damages</i> box on that FD's daily entry.</p>
+        <p>Paused lines (an open dispute, or no signed agreement if you've chosen to hold those) are left out of the download and the claim's remaining instalments move on to later pay periods.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ALL CLAIMS -->
+  <section class="panel" id="tab-claims" hidden>
+    <div class="card controls">
+      <div class="seg" id="cStatusSeg" role="group" aria-label="Claim status">
+        <button type="button" data-status="open" aria-pressed="true">Open</button>
+        <button type="button" data-status="all" aria-pressed="false">All</button>
+        <button type="button" data-status="closed" aria-pressed="false">Closed</button>
+      </div>
+      <label class="grow" for="cScope">Showing<select id="cScope"></select></label>
+      <label class="grow" for="cSearch">Search<input type="text" id="cSearch" autocomplete="off" placeholder="DPD ref, tracking no., reg, words…"></label>
+      <button class="btn" type="button" id="cExport">Download CSV</button>
+    </div>
+    <p class="msg" id="cMsg" role="status"></p>
+    <section class="card" id="detail" hidden></section>
+    <article class="block">
+      <div class="block-head"><h3 id="cTitle">Claims</h3><span class="meta">Tap a claim to open it with its full deduction schedule.</span></div>
+      <div class="scroll"><table id="cTable"></table></div>
+    </article>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="panel" id="tab-settings" hidden>
+    <div class="card">
+      <h2>FDs</h2>
+      <p class="note">Each FD is linked to an email address and a depot, as in the P&amp;L Tracker. Every claim is logged against an FD, so you can see which FD, email and depot a charge belongs to.</p>
+      <div class="scroll" style="margin-top:10px"><table id="fdList"></table></div>
+      <form id="fdForm" class="formgrid" style="margin-top:14px" novalidate>
+        <label for="xCode">FD number / name *<input type="text" id="xCode" autocomplete="off" placeholder="e.g. FD 1042"></label>
+        <label for="xEmail">Email *<input type="email" id="xEmail" autocomplete="off" placeholder="e.g. fd1042@…"></label>
+        <label for="xDepot">Depot *<select id="xDepot"></select></label>
+        <label class="check" for="xActive"><input type="checkbox" id="xActive" checked> Active</label>
+        <div class="actions" style="align-self:end">
+          <button class="btn primary" type="submit" id="xSubmit">Add FD</button>
+          <button class="btn" type="button" id="xCancel" hidden>Cancel edit</button>
+        </div>
+      </form>
+      <p class="msg" id="xMsg" role="status"></p>
+    </div>
+
+    <div class="card">
+      <h2>Drivers</h2>
+      <p class="note">Use the same name as in the Driver Pay Log, so the deductions line up. Their usual FD fills in when you log a claim, and can be changed per claim.</p>
+      <div class="scroll" style="margin-top:10px"><table id="drvList"></table></div>
+      <form id="drvForm" class="formgrid" style="margin-top:14px" novalidate>
+        <label for="dName">Driver name *<input type="text" id="dName" autocomplete="off" placeholder="e.g. Jamie Clarke"></label>
+        <label for="dDepot">Depot *<select id="dDepot"></select></label>
+        <label for="dFd">Usual FD <span class="opt">(optional)</span><select id="dFd"></select></label>
+        <label class="check" for="dActive"><input type="checkbox" id="dActive" checked> Active</label>
+        <div class="actions" style="align-self:end">
+          <button class="btn primary" type="submit" id="dSubmit">Add driver</button>
+          <button class="btn" type="button" id="dCancel" hidden>Cancel edit</button>
+        </div>
+      </form>
+      <p class="msg" id="dMsg" role="status"></p>
+    </div>
+
+    <div class="card">
+      <h2>Rules and pay period</h2>
+      <form id="rulesForm" class="form" style="margin-top:10px" novalidate>
+        <div class="formgrid">
+          <label for="rStart">First day of a 4-week pay period<input type="date" id="rStart"></label>
+          <label for="rDepots">Depots <span class="opt">(separate with commas)</span><input type="text" id="rDepots" autocomplete="off"></label>
+        </div>
+        <label class="check" for="rHold"><input type="checkbox" id="rHold"> Hold deductions until the driver has signed an agreement</label>
+        <div class="rulebox" id="ruleSummary"></div>
+        <div class="actions"><button class="btn primary" type="submit" id="saveRules">Save rules</button></div>
+        <p class="msg" id="rMsg" role="status"></p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  const DAY = 864e5;
+  const TYPES = { van: "Van damage", lost: "Parcel lost", pdamaged: "Parcel damaged", third: "Third-party damage", fine: "Fine / PCN" };
+  // Charge types in the Driver Pay Log.
+  const PAYLOG_TYPE = (t) => (t === "fine" ? "Parking ticket" : "Van damage");
+  const DEFAULT_SETTINGS = { periodStart: "2026-11-02", depots: ["Raunds", "Glenfield"], holdUnsigned: false };
+  const $ = (id) => document.getElementById(id);
+
+  // ---------- dates and money ----------
+  const toT = (s) => { const [y, m, d] = s.split("-").map(Number); return Date.UTC(y, m - 1, d); };
+  const toS = (t) => new Date(t).toISOString().slice(0, 10);
+  const addDays = (s, n) => toS(toT(s) + n * DAY);
+  const todayS = () => { const n = new Date(); return toS(Date.UTC(n.getFullYear(), n.getMonth(), n.getDate())); };
+  const isDate = (s) => typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);
+  const fmt = (s, o) => new Date(toT(s)).toLocaleDateString("en-GB", { timeZone: "UTC", ...o });
+  const shortD = (s) => (isDate(s) ? fmt(s, { day: "numeric", month: "short" }) : "–");
+  const medD = (s) => (isDate(s) ? fmt(s, { day: "numeric", month: "short", year: "numeric" }) : "–");
+  const gbp = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" });
+  const r2 = (v) => Math.round((v || 0) * 100) / 100;
+  const money = (v) => gbp.format(r2(v));
+  const mOrDash = (v) => (Math.abs(v) > 0.004 ? money(v) : "–");
+  const num = (v) => { const n = parseFloat(v); return Number.isFinite(n) ? n : 0; };
+  const has = (v) => v !== null && v !== undefined && v !== "" && Number.isFinite(Number(v));
+  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const mod = (a, b) => ((a % b) + b) % b;
+  const regKey = (v) => String(v || "").toUpperCase().replace(/\s+/g, "");
+  const regShow = (v) => String(v || "").toUpperCase().trim();
+  const safeUrl = (u) => (/^https?:\/\//i.test(String(u || "").trim()) ? String(u).trim() : "");
+
+  // ---------- state ----------
+  const S = {
+    settings: { ...DEFAULT_SETTINGS }, drivers: [], driversLoaded: false, fds: [], fdsLoaded: false,
+    claims: [], claimsLoaded: false, db: null, dl: null, canWrite: true, local: false,
+  };
+  const ui = { tab: "dashboard", status: "all", scope: "ALL", wDate: todayS(), wScope: "ALL", cStatus: "open", cScope: "ALL", cSearch: "", editing: null, editingDriver: null, editingFd: null, detail: null };
+  try { const v = localStorage.getItem("dc-status"); if (["open", "all", "closed"].includes(v)) ui.status = v; } catch (_) {}
+
+  const driverById = (id) => S.drivers.find((d) => d.id === id);
+  const fdById = (id) => S.fds.find((f) => f.id === id);
+  const byName = (list, k) => list.slice().sort((a, b) => String(a[k]).localeCompare(String(b[k]), undefined, { numeric: true }));
+  const setMsg = (el, text, kind) => { el.textContent = text; el.className = "msg" + (kind ? " " + kind : ""); };
+  const writeErr = (err) => (err && err.code === "quota_exceeded" ? "The log is full. Download old claims and delete them to make room." : "Couldn't save. Check your connection and try again.");
+  function arm(btn) {
+    if (btn.classList.contains("armed")) return true;
+    btn.classList.add("armed"); const old = btn.textContent; btn.textContent = "Confirm";
+    setTimeout(() => { btn.classList.remove("armed"); btn.textContent = old; }, 3500);
+    return false;
+  }
+  function banner(t) { $("banner").textContent = t; $("banner").hidden = !t; }
+
+  // ---------- pay periods (same 28-day cycle as the Driver Pay Log) ----------
+  function periodInfo(s) {
+    const anchor = S.settings.periodStart || DEFAULT_SETTINGS.periodStart;
+    const off = Math.round((toT(s) - toT(anchor)) / DAY);
+    const p = Math.floor(off / 28);
+    return { start: addDays(anchor, p * 28), end: addDays(anchor, p * 28 + 27) };
+  }
+  const periodLabel = (p) => `${shortD(p.start)} – ${medD(p.end)}`;
+
+  // ---------- the claim maths ----------
+  // Cost to the business: the total charged, or the excess if it is going through insurance (whichever is lower).
+  // Driver's share comes back through wages; the rest is absorbed by the business.
+  // Deductions: one line per 4-week pay period from the first deduction period, the full share or the plan amount
+  // until the balance is cleared. A line counts as paid once its pay period has ended.
+  // A period is paused while a dispute is open on its last day (and, if chosen, while the agreement isn't signed);
+  // paused instalments move to later periods. A won dispute stops deductions and anything already taken is refunded
+  // in the pay period of the outcome date.
+  function calc(c, today) {
+    today = today || todayS();
+    const total = num(c.total);
+    const insured = !!c.insured;
+    const excess = insured && has(c.excess) ? num(c.excess) : null;
+    const cost = excess !== null ? Math.min(excess, total) : total;
+    const insurer = r2(total - cost);
+    const share = r2(Math.min(num(c.driverShare), cost));
+    const paidBefore = r2(Math.min(num(c.paidBefore), share));
+    const disputed = !!c.disputed;
+    const dStatus = disputed ? (c.disputeStatus || "open") : "";
+    const dOpen = disputed && dStatus === "open";
+    const dWon = disputed && dStatus === "won";
+    const dLost = disputed && dStatus === "lost";
+    const raised = disputed && isDate(c.disputeRaised) ? c.disputeRaised : null;
+    const outcome = disputed && isDate(c.outcomeDate) ? c.outcomeDate : null;
+    const by = c.disputeWith === "driver" ? "driver" : "dpd";
+    const holdUnsigned = !!S.settings.holdUnsigned && !c.signed;
+    const per = c.payment === "plan" ? r2(num(c.perPeriod)) : share;
+    const nowP = periodInfo(today);
+
+    const lines = [];
+    let remaining = r2(share - paidBefore);
+    let pending = ""; // why deductions are waiting with nothing scheduled
+    const firstDate = isDate(c.startDate) ? c.startDate : (isDate(c.reportedDate) ? c.reportedDate : c.incidentDate);
+    if (remaining > 0.004 && per > 0.004 && isDate(firstDate)) {
+      let p = periodInfo(firstDate), i = 0, n = 0;
+      while (remaining > 0.004 && i < 400) {
+        i++;
+        const disputeCovers = disputed && (raised ? raised <= p.end : true);
+        if (dWon && disputeCovers) break;
+        const disputePaused = disputeCovers && (dOpen || (dLost && (!outcome || outcome > p.end)));
+        const reason = disputePaused ? "Dispute open" : holdUnsigned ? "Not signed" : "";
+        if (reason) {
+          if (p.start > nowP.end) { pending = reason; break; }
+          lines.push({ start: p.start, end: p.end, amount: 0, paused: reason, done: p.end < today });
+        } else {
+          const amt = r2(Math.min(per, remaining));
+          n++;
+          lines.push({ start: p.start, end: p.end, amount: amt, paused: "", done: p.end < today, n });
+          remaining = r2(remaining - amt);
+        }
+        p = { start: addDays(p.start, 28), end: addDays(p.end, 28) };
+      }
+    }
+    const totalN = lines.filter((l) => !l.paused).length;
+    lines.forEach((l) => { if (!l.paused) l.of = totalN; });
+    const taken = r2(lines.filter((l) => !l.paused && l.done).reduce((a, l) => a + l.amount, 0));
+    let paid = r2(paidBefore + taken);
+    let refund = 0, refundPeriod = null;
+    if (dWon) {
+      refund = r2(paidBefore + lines.filter((l) => !l.paused).reduce((a, l) => a + l.amount, 0));
+      refundPeriod = outcome ? periodInfo(outcome).start : null;
+    }
+    const refunded = refund > 0.004 && refundPeriod && periodInfo(refundPeriod).end < today;
+    const effShare = dWon ? 0 : share;
+    const effCost = dWon && by === "dpd" ? 0 : cost;
+    const absorbed = r2(Math.max(effCost - effShare, 0));
+    const balance = dWon ? 0 : r2(Math.max(share - paid, 0));
+    const recovered = dWon ? (refunded ? 0 : paid) : paid;
+    const dueNow = lines.find((l) => l.start === nowP.start);
+    const closed = dWon || (!dOpen && balance <= 0.004);
+    const unsigned = share > 0.004 && !c.signed;
+    const nextLine = lines.find((l) => !l.paused && !l.done);
+    const instalments = c.payment === "plan" ? (per > 0 ? Math.ceil(r2(share - paidBefore) / per - 1e-9) : 0) : (share > 0.004 ? 1 : 0);
+    return {
+      ...c, total, insured, excess, cost, insurer, share, paidBefore, per, lines, paid, balance, recovered, absorbed,
+      effShare, refund, refundPeriod, refunded, dueNow: dueNow && !dueNow.paused ? dueNow.amount : 0, closed, unsigned,
+      dOpen, dWon, dLost, dStatus, by, pending, nextLine, instalments, depot: claimDepot(c),
+      driverName: claimDriver(c), fdCode: claimFd(c).code, fdEmail: claimFd(c).email, vanKey: regKey(c.vanReg),
+    };
+  }
+  function claimDriver(c) { const d = driverById(c.driverId); return (d && d.name) || c.driver || "Unknown driver"; }
+  function claimFd(c) { const f = fdById(c.fdId); return f ? { code: f.code, email: f.email, depot: f.depot } : { code: c.fd || "", email: c.fdEmail || "", depot: c.depot || "" }; }
+  function claimDepot(c) { const f = fdById(c.fdId); if (f && f.depot) return f.depot; if (c.depot) return c.depot; const d = driverById(c.driverId); return (d && d.depot) || ""; }
+
+  let calcCache = { key: null, list: [] };
+  function allCalc() {
+    const key = S.claims.length + "|" + todayS() + "|" + JSON.stringify(S.settings) + "|" + S.drivers.length + "|" + S.fds.length + "|" + S.rev;
+    if (calcCache.key !== key) calcCache = { key, list: S.claims.map((c) => calc(c)) };
+    return calcCache.list;
+  }
+  S.rev = 0;
+
+  // ---------- chips ----------
+  const typeChip = (t) => `<span class="chip ${esc(t)}">${esc(TYPES[t] || t)}</span>`;
+  function statusChips(x) {
+    const out = [];
+    out.push(x.closed ? `<span class="chip ok">${x.dWon ? "Closed · dispute won" : "Closed"}</span>` : `<span class="chip">Open</span>`);
+    if (x.dOpen) out.push(`<span class="chip warn">Dispute open</span>`);
+    if (x.dLost) out.push(`<span class="chip">Dispute lost</span>`);
+    if (x.unsigned) out.push(`<span class="chip bad">Not signed</span>`);
+    if (x.refund > 0.004 && !x.refunded) out.push(`<span class="chip warn">Refund ${money(x.refund)}</span>`);
+    return `<span class="chips">${out.join("")}</span>`;
+  }
+  const fdCell = (x) => `<div class="name">${esc(x.fdCode || "No FD")}</div>${x.fdEmail ? `<div class="email">${esc(x.fdEmail)}</div>` : ""}`;
+
+  // ---------- scope ----------
+  function scopeOptions(sel, value) {
+    const claims = allCalc();
+    const vans = [...new Map(claims.filter((x) => x.vanKey).map((x) => [x.vanKey, regShow(x.vanReg)])).entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    const depots = [...new Set((S.settings.depots || []).concat(claims.map((x) => x.depot)).filter(Boolean))];
+    let h = `<option value="ALL">Everything</option>`;
+    h += `<optgroup label="Depots">${depots.map((d) => `<option value="D:${esc(d)}">${esc(d)}</option>`).join("")}</optgroup>`;
+    if (S.fds.length) h += `<optgroup label="FDs">${byName(S.fds, "code").map((f) => `<option value="F:${esc(f.id)}">${esc(f.code)} · ${esc(f.email)}</option>`).join("")}</optgroup>`;
+    if (S.drivers.length) h += `<optgroup label="Drivers">${byName(S.drivers, "name").map((d) => `<option value="R:${esc(d.id)}">${esc(d.name)}</option>`).join("")}</optgroup>`;
+    if (vans.length) h += `<optgroup label="Vans">${vans.map(([k, v]) => `<option value="V:${esc(k)}">${esc(v)}</option>`).join("")}</optgroup>`;
+    h += `<optgroup label="Types">${Object.entries(TYPES).map(([k, v]) => `<option value="T:${k}">${esc(v)}</option>`).join("")}</optgroup>`;
+    sel.innerHTML = h;
+    sel.value = value;
+    if (sel.value !== value) sel.value = "ALL";
+    return sel.value;
+  }
+  function inScope(x, scope) {
+    if (scope === "ALL") return true;
+    const v = scope.slice(2);
+    switch (scope[0]) {
+      case "D": return x.depot === v;
+      case "F": return x.fdId === v;
+      case "R": return x.driverId === v;
+      case "V": return x.vanKey === v;
+      case "T": return x.type === v;
+    }
+    return true;
+  }
+  function scopeName(scope) {
+    if (scope === "ALL") return "All depots, FDs and drivers";
+    const v = scope.slice(2);
+    if (scope[0] === "D") return `${v} depot`;
+    if (scope[0] === "F") { const f = fdById(v); return f ? `${f.code} · ${f.email}` : "FD"; }
+    if (scope[0] === "R") { const d = driverById(v); return d ? d.name : "Driver"; }
+    if (scope[0] === "V") return `Van ${v}`;
+    if (scope[0] === "T") return TYPES[v] || v;
+    return "";
+  }
+  const statusOk = (x, st) => st === "all" || (st === "open" ? !x.closed : x.closed);
+
+  function agg(list) {
+    const t = { n: 0, open: 0, total: 0, cost: 0, share: 0, paid: 0, balance: 0, absorbed: 0, insurer: 0, due: 0, unsigned: 0, disputes: 0, refunds: 0 };
+    for (const x of list) {
+      t.n++; if (!x.closed) t.open++;
+      t.total += x.total; t.cost += x.cost; t.share += x.effShare; t.paid += x.recovered; t.balance += x.balance;
+      t.absorbed += x.absorbed; t.insurer += x.insurer; t.due += x.dueNow;
+      if (x.unsigned && !x.closed) t.unsigned++;
+      if (x.dOpen) t.disputes++;
+      if (x.refund > 0.004 && !x.refunded) t.refunds += x.refund;
+    }
+    return t;
+  }
+  const AH = `<th>Claims</th><th>Open</th><th>Total charged</th><th>Driver share</th><th>Paid back</th><th>Outstanding</th><th>Absorbed</th><th>Due this period</th>`;
+  const acells = (t) => `<td>${t.n}</td><td>${t.open || "–"}</td><td>${money(t.total)}</td><td>${mOrDash(t.share)}</td><td>${mOrDash(t.paid)}</td><td class="${t.balance > 0.004 ? "neg" : ""}">${mOrDash(t.balance)}</td><td>${mOrDash(t.absorbed)}</td><td>${mOrDash(t.due)}</td>`;
+
+  // ============================================================ DASHBOARD
+  function renderDashboard() {
+    ui.scope = scopeOptions($("scopeSel"), ui.scope);
+    document.querySelectorAll("#statusSeg button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.status === ui.status)));
+    const all = allCalc();
+    const list = all.filter((x) => inScope(x, ui.scope) && statusOk(x, ui.status));
+    const stLabel = { open: "open claims", all: "all claims", closed: "closed claims" }[ui.status];
+    $("rangeTitle").innerHTML = `${esc(scopeName(ui.scope))} <small>· ${stLabel} · as of ${esc(medD(todayS()))}</small>`;
+
+    const ready = S.claimsLoaded && S.driversLoaded && S.fdsLoaded;
+    const empty = ready && !S.claims.length;
+    $("dashEmpty").hidden = !empty;
+    if (empty) $("dashEmpty").innerHTML = `<div class="block empty"><h3>No claims logged yet</h3><p>${S.fds.length && S.drivers.length ? "Use <b>Log a claim</b> to add the first one." : "Add your FDs and drivers under <b>FDs, drivers &amp; rules</b>, then use <b>Log a claim</b>."}</p></div>`;
+
+    const t = agg(list);
+    const p = periodInfo(todayS());
+    $("kpis").innerHTML = `
+      <div class="tile main"><span class="eyebrow">Outstanding from drivers</span><b>${money(t.balance)}</b><small>${t.open} open claim${t.open === 1 ? "" : "s"}</small></div>
+      <div class="tile minus"><span class="eyebrow">Absorbed by the business</span><b>${money(t.absorbed)}</b><small>after driver shares${t.insurer > 0.004 ? " and insurance" : ""}</small></div>
+      <div class="tile"><span class="eyebrow">Total charged</span><b>${money(t.total)}</b><small>${t.n} claim${t.n === 1 ? "" : "s"}${t.insurer > 0.004 ? ` · insurer ${money(t.insurer)}` : ""}</small></div>
+      <div class="tile plus"><span class="eyebrow">Paid back by drivers</span><b>${money(t.paid)}</b><small>of ${money(t.share)} driver share</small></div>
+      <div class="tile"><span class="eyebrow">Due this pay period</span><b>${money(t.due)}</b><small>${esc(periodLabel(p))}</small></div>
+      <div class="tile ${t.unsigned ? "warn" : ""}"><span class="eyebrow">Not signed</span><b>${t.unsigned}</b><small>open claims with a deduction</small></div>
+      <div class="tile ${t.disputes ? "warn" : ""}"><span class="eyebrow">Disputes open</span><b>${t.disputes}</b><small>deductions paused</small></div>
+      <div class="tile ${t.refunds > 0.004 ? "warn" : ""}"><span class="eyebrow">Refunds owed</span><b>${money(t.refunds)}</b><small>after won disputes</small></div>`;
+
+    // needs attention
+    const attn = all.filter((x) => inScope(x, ui.scope) && ((x.unsigned && !x.closed) || x.dOpen || (x.refund > 0.004 && !x.refunded)));
+    $("attnBlock").hidden = !attn.length;
+    $("attnTable").innerHTML = `<thead><tr><th class="l">Driver</th><th class="l">Claim</th><th class="l">What's wrong</th><th>Driver share</th><th>Outstanding</th><th></th></tr></thead><tbody>` +
+      attn.map((x) => {
+        const why = [];
+        if (x.unsigned && !x.closed) why.push("Deduction but no signed agreement");
+        if (x.dOpen) why.push(`Dispute open since ${shortD(x.disputeRaised)}, deductions paused`);
+        if (x.refund > 0.004 && !x.refunded) why.push(`Dispute won: refund ${money(x.refund)} in ${x.refundPeriod ? periodLabel(periodInfo(x.refundPeriod)) : "the outcome pay period"}`);
+        return `<tr class="click" data-open="${esc(x.id)}"><td class="l name">${esc(x.driverName)}</td><td class="l">${typeChip(x.type)} <span class="small">${esc(shortD(x.incidentDate))}${x.dpdRef ? " · " + esc(x.dpdRef) : ""}</span></td><td class="l">${why.map(esc).join("<br>")}</td><td>${mOrDash(x.share)}</td><td>${mOrDash(x.balance)}</td><td><button class="mini" type="button" data-edit="${esc(x.id)}">Edit</button></td></tr>`;
+      }).join("") + `</tbody>`;
+
+    // groupings
+    const group = (keyFn) => { const m = new Map(); for (const x of list) { const k = keyFn(x); if (!m.has(k)) m.set(k, []); m.get(k).push(x); } return m; };
+    const totalRow = `<tfoot><tr><td>Total</td>__PAD__${acells(t)}</tr></tfoot>`;
+    const emptyRow = (cols) => `<tbody><tr><td class="l" colspan="${cols}"><span class="small">No claims for this selection.</span></td></tr></tbody>`;
+
+    const gd = group((x) => x.driverId || "?");
+    let rows = [...gd.entries()].map(([id, arr]) => ({ id, name: arr[0].driverName, depot: (driverById(id) || {}).depot || arr[0].depot, t: agg(arr) })).sort((a, b) => b.t.balance - a.t.balance || a.name.localeCompare(b.name));
+    $("driverTable").innerHTML = `<thead><tr><th class="l">Driver</th><th class="l">Depot</th>${AH}<th>Not signed</th></tr></thead>` + (rows.length ? `<tbody>${rows.map((r) => `<tr class="click${ui.scope === "R:" + r.id ? " sel" : ""}" data-scope="R:${esc(r.id)}"><td class="l name">${esc(r.name)}</td><td class="l">${esc(r.depot)}</td>${acells(r.t)}<td>${r.t.unsigned ? `<span class="chip bad">${r.t.unsigned}</span>` : "–"}</td></tr>`).join("")}</tbody>${totalRow.replace("__PAD__", "<td></td>").replace("</tr></tfoot>", `<td>${t.unsigned || "–"}</td></tr></tfoot>`)}` : emptyRow(11));
+
+    const gv = group((x) => x.vanKey || "");
+    rows = [...gv.entries()].map(([k, arr]) => ({ k, name: k ? regShow(arr[0].vanReg) : "No van", t: agg(arr), types: [...new Set(arr.map((x) => x.type))] })).sort((a, b) => (a.k ? 0 : 1) - (b.k ? 0 : 1) || b.t.total - a.t.total);
+    $("vanTable").innerHTML = `<thead><tr><th class="l">Van reg</th><th class="l">Types</th>${AH}</tr></thead>` + (rows.length ? `<tbody>${rows.map((r) => `<tr class="${r.k ? "click" : "dim"}${ui.scope === "V:" + r.k ? " sel" : ""}" ${r.k ? `data-scope="V:${esc(r.k)}"` : ""}><td class="l name">${esc(r.name)}</td><td class="l"><span class="chips">${r.types.map(typeChip).join("")}</span></td>${acells(r.t)}</tr>`).join("")}</tbody>${totalRow.replace("__PAD__", "<td></td>")}` : emptyRow(10));
+
+    const gf = group((x) => x.fdId || "?");
+    rows = [...gf.entries()].map(([id, arr]) => ({ id, x: arr[0], t: agg(arr) })).sort((a, b) => String(a.x.depot).localeCompare(String(b.x.depot)) || String(a.x.fdCode).localeCompare(String(b.x.fdCode), undefined, { numeric: true }));
+    $("fdTable").innerHTML = `<thead><tr><th class="l">FD / email</th><th class="l">Depot</th>${AH}</tr></thead>` + (rows.length ? `<tbody>${rows.map((r) => `<tr class="click${ui.scope === "F:" + r.id ? " sel" : ""}" data-scope="F:${esc(r.id)}"><td class="l">${fdCell(r.x)}</td><td class="l">${esc(r.x.depot)}</td>${acells(r.t)}</tr>`).join("")}</tbody>${totalRow.replace("__PAD__", "<td></td>")}` : emptyRow(10));
+
+    const gdep = group((x) => x.depot || "");
+    const depots = [...new Set((S.settings.depots || []).concat([...gdep.keys()]))];
+    $("depotTable").innerHTML = `<thead><tr><th class="l">Depot</th><th>FDs</th>${AH}</tr></thead><tbody>` + depots.map((d) => { const arr = gdep.get(d) || []; return `<tr class="click${ui.scope === "D:" + d ? " sel" : ""}" data-scope="D:${esc(d)}"><td class="l name">${esc(d || "No depot")}</td><td>${new Set(arr.map((x) => x.fdId)).size || "–"}</td>${acells(agg(arr))}</tr>`; }).join("") + `</tbody>${totalRow.replace("__PAD__", "<td></td>")}`;
+
+    const gt = group((x) => x.type);
+    $("typeTable").innerHTML = `<thead><tr><th class="l">Type</th><th>Insured</th>${AH}</tr></thead><tbody>` + Object.keys(TYPES).map((k) => { const arr = gt.get(k) || []; return `<tr class="click${ui.scope === "T:" + k ? " sel" : ""}" data-scope="T:${k}"><td class="l">${typeChip(k)}</td><td>${arr.filter((x) => x.insured).length || "–"}</td>${acells(agg(arr))}</tr>`; }).join("") + `</tbody>${totalRow.replace("__PAD__", "<td></td>")}`;
+
+    $("dClaimsTitle").textContent = `Claims (${list.length})`;
+    $("dClaims").innerHTML = claimsTable(list.slice().sort((a, b) => String(b.incidentDate).localeCompare(String(a.incidentDate))), false);
+  }
+
+  // ---------- claims table (shared) ----------
+  function claimsTable(list, full) {
+    if (!list.length) return `<tbody><tr><td class="l"><span class="small">No claims for this selection.</span></td></tr></tbody>`;
+    const head = `<thead><tr><th class="l">Incident</th><th class="l">Reported</th><th class="l">Driver</th><th class="l">FD / email</th><th class="l">Depot</th><th class="l">Route</th><th class="l">Van</th><th class="l">Type</th><th class="l">DPD ref</th><th class="l">Tracking</th>${full ? `<th class="l">Description</th><th class="l">Evidence</th>` : ""}<th>Total</th><th class="l">Insurance</th><th>Driver share</th><th>Absorbed</th><th class="l">Signed</th><th class="l">Payment</th><th>Paid</th><th>Balance</th><th class="l">Next deduction</th><th class="l">Status</th>${full ? "<th></th>" : ""}</tr></thead>`;
+    const body = list.map((x) => {
+      const link = safeUrl(x.evidenceUrl);
+      const pay = x.share <= 0.004 ? "–" : x.payment === "plan" ? `Plan · ${money(x.per)} × ${x.instalments}` : "In full";
+      const next = x.closed ? "–" : x.nextLine ? `${money(x.nextLine.amount)} · ${shortD(x.nextLine.end)}` : x.pending ? `<span class="chip warn">${esc(x.pending)}</span>` : "–";
+      return `<tr class="click${ui.detail === x.id ? " sel" : ""}" data-open="${esc(x.id)}">
+        <td class="l">${esc(shortD(x.incidentDate))}</td><td class="l">${esc(shortD(x.reportedDate))}</td>
+        <td class="l name">${esc(x.driverName)}</td><td class="l">${fdCell(x)}</td><td class="l">${esc(x.depot)}</td>
+        <td class="l">${esc(x.route || "–")}</td><td class="l">${esc(regShow(x.vanReg) || "–")}</td><td class="l">${typeChip(x.type)}</td>
+        <td class="l">${esc(x.dpdRef || "–")}</td><td class="l">${esc(x.tracking || "–")}</td>
+        ${full ? `<td class="wrapcell">${esc(x.description)}</td><td class="l">${link ? `<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">Open</a>` : "–"}</td>` : ""}
+        <td>${money(x.total)}</td><td class="l">${x.insured ? `Yes${x.excess !== null ? " · excess " + money(x.excess) : ""}` : "No"}</td>
+        <td>${mOrDash(x.share)}</td><td>${mOrDash(x.absorbed)}</td>
+        <td class="l">${x.share <= 0.004 ? "–" : x.signed ? `<span class="chip ok">Yes</span>` : `<span class="chip bad">No</span>`}</td>
+        <td class="l">${pay}</td><td>${mOrDash(x.recovered)}</td><td class="${x.balance > 0.004 ? "neg" : ""}">${mOrDash(x.balance)}</td>
+        <td class="l">${next}</td><td class="l">${statusChips(x)}</td>
+        ${full ? `<td><div class="rowbtns"><button class="mini" type="button" data-edit="${esc(x.id)}">Edit</button><button class="mini" type="button" data-del="${esc(x.id)}">Delete</button></div></td>` : ""}
+      </tr>`;
+    }).join("");
+    return head + `<tbody>${body}</tbody>`;
+  }
+
+  function schedTable(x) {
+    if (x.share <= 0.004) return `<tbody><tr><td class="l"><span class="small">No driver share, so nothing comes off wages. The business absorbs ${esc(money(x.absorbed))}.</span></td></tr></tbody>`;
+    const rows = [];
+    if (x.paidBefore > 0.004) rows.push(`<tr><td class="l">Before this log</td><td class="l">–</td><td>${money(x.paidBefore)}</td><td class="l"><span class="chip ok">Paid</span></td></tr>`);
+    let bal = r2(x.share - x.paidBefore);
+    for (const l of x.lines) {
+      if (!l.paused) bal = r2(bal - l.amount);
+      const st = l.paused ? `<span class="chip warn">Paused · ${esc(l.paused)}</span>` : l.done ? `<span class="chip ok">Taken</span>` : l.start <= todayS() ? `<span class="chip">This period</span>` : `<span class="chip">Planned</span>`;
+      rows.push(`<tr class="${l.paused ? "dim" : ""}"><td class="l">${esc(periodLabel(l))}</td><td class="l">${l.paused ? "–" : `${l.n} of ${l.of}`}</td><td>${l.paused ? "–" : money(l.amount)}</td><td class="l">${st} <span class="small">${l.paused ? "" : "balance after " + money(bal)}</span></td></tr>`);
+    }
+    if (x.pending) rows.push(`<tr class="dim"><td class="l">Later periods</td><td class="l">–</td><td>${money(x.balance)}</td><td class="l"><span class="chip warn">Waiting · ${esc(x.pending)}</span></td></tr>`);
+    if (x.dWon) rows.push(`<tr><td class="l">${x.refundPeriod ? esc(periodLabel(periodInfo(x.refundPeriod))) : "Outcome period"}</td><td class="l">Refund</td><td class="pos">${mOrDash(x.refund)}</td><td class="l">Dispute won${x.refund > 0.004 ? (x.refunded ? " · refunded" : " · refund owed") : " · nothing to refund"}</td></tr>`);
+    if (!x.lines.length && !x.pending && !x.dWon && x.balance > 0.004) rows.push(`<tr><td class="l" colspan="4"><span class="small">Set the amount per pay period to build the schedule.</span></td></tr>`);
+    return `<thead><tr><th class="l">Pay period</th><th class="l">Instalment</th><th>Amount</th><th class="l">Status</th></tr></thead><tbody>${rows.join("")}</tbody>`;
+  }
+
+  function dlRows(x) {
+    const link = safeUrl(x.evidenceUrl);
+    const d = (k, v) => `<div><span>${esc(k)}</span><b>${v}</b></div>`;
+    return `<div class="dl">
+      ${d("Incident / reported", `${esc(medD(x.incidentDate))} / ${esc(medD(x.reportedDate))}`)}
+      ${d("Driver", esc(x.driverName))}
+      ${d("FD", `${esc(x.fdCode || "–")}${x.fdEmail ? `<br><span class="small">${esc(x.fdEmail)}</span>` : ""}`)}
+      ${d("Depot", esc(x.depot || "–"))}
+      ${d("Route / van", `${esc(x.route || "–")} / ${esc(regShow(x.vanReg) || "–")}`)}
+      ${d("Type", typeChip(x.type))}
+      ${d("DPD claim ref", esc(x.dpdRef || "–"))}
+      ${d("Parcel tracking", esc(x.tracking || "–"))}
+      ${d("Evidence", link ? `<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">Open photos / evidence</a>` : "–")}
+      ${d("Total charged", money(x.total))}
+      ${d("Insurance", x.insured ? `Yes · excess ${x.excess !== null ? money(x.excess) : "not set"} · insurer ${money(x.insurer)}` : "No")}
+      ${d("Driver's share", `${money(x.share)}${x.dWon ? " (cancelled)" : ""}`)}
+      ${d("Absorbed by business", money(x.absorbed))}
+      ${d("Signed agreement", x.share <= 0.004 ? "Not needed" : x.signed ? "Yes" : "No")}
+      ${d("Payment", x.share <= 0.004 ? "–" : x.payment === "plan" ? `Plan · ${money(x.per)} a pay period × ${x.instalments}` : "In full")}
+      ${d("Paid so far / balance", `${money(x.recovered)} / ${money(x.balance)}`)}
+      ${d("Dispute", x.disputed ? `${esc({ open: "Open", won: "Won", lost: "Lost" }[x.dStatus])} · ${x.by === "driver" ? "by the driver" : "with DPD / third party"} · raised ${esc(shortD(x.disputeRaised))}${x.outcomeDate && !x.dOpen ? " · outcome " + esc(shortD(x.outcomeDate)) : ""}` : "No")}
+    </div>
+    <p style="margin:10px 0 0"><span class="eyebrow">Description</span><br>${esc(x.description || "–")}</p>
+    ${x.disputed && x.disputeNotes ? `<p style="margin:8px 0 0"><span class="eyebrow">Dispute notes</span><br>${esc(x.disputeNotes)}</p>` : ""}`;
+  }
+
+  // ============================================================ ALL CLAIMS
+  function renderClaims() {
+    ui.cScope = scopeOptions($("cScope"), ui.cScope);
+    document.querySelectorAll("#cStatusSeg button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.status === ui.cStatus)));
+    const q = ui.cSearch.trim().toLowerCase();
+    const qk = regKey(q).toLowerCase();
+    const all = allCalc();
+    const list = all.filter((x) => inScope(x, ui.cScope) && statusOk(x, ui.cStatus) && (!q ||
+      [x.dpdRef, x.tracking, x.description, x.driverName, x.fdCode, x.fdEmail, x.route, x.disputeNotes].some((v) => String(v || "").toLowerCase().includes(q)) || (qk && x.vanKey.toLowerCase().includes(qk))))
+      .sort((a, b) => String(b.incidentDate).localeCompare(String(a.incidentDate)));
+    const t = agg(list);
+    $("cTitle").textContent = `${list.length} claim${list.length === 1 ? "" : "s"} · ${money(t.balance)} outstanding · ${money(t.absorbed)} absorbed`;
+    $("cTable").innerHTML = claimsTable(list, true);
+    const x = ui.detail && all.find((c) => c.id === ui.detail);
+    $("detail").hidden = !x;
+    if (x) {
+      $("detail").innerHTML = `<div class="rangeline"><h2 style="font-size:22px">${typeChip(x.type)} ${esc(x.driverName)} <small>· ${esc(medD(x.incidentDate))}</small></h2>
+        <div class="actions">${statusChips(x)}<button class="mini" type="button" data-edit="${esc(x.id)}">Edit</button><button class="mini" type="button" data-close-detail="1">Close</button></div></div>
+        ${x.unsigned ? `<div class="flag" style="margin-top:10px">⚠ ${esc(money(x.share))} is due from the driver but they haven't signed an agreement to the deduction.</div>` : ""}
+        <div style="margin-top:12px">${dlRows(x)}</div>
+        <div class="block" style="margin-top:14px"><div class="block-head"><h3>Deduction schedule</h3><span class="meta">One line per 4-week pay period</span></div><div class="scroll"><table>${schedTable(x)}</table></div></div>`;
+    }
+  }
+
+  // ============================================================ PAY PERIOD
+  function periodData(pStart, scope) {
+    const p = periodInfo(pStart);
+    const lines = [];
+    for (const x of allCalc()) {
+      if (!inScope(x, scope)) continue;
+      const l = x.lines.find((y) => y.start === p.start);
+      if (l) lines.push({ x, kind: l.paused ? "paused" : "deduct", amount: l.paused ? 0 : l.amount, l });
+      if (x.dWon && x.refund > 0.004 && x.refundPeriod === p.start) lines.push({ x, kind: "refund", amount: x.refund });
+    }
+    lines.sort((a, b) => a.x.driverName.localeCompare(b.x.driverName) || String(a.x.incidentDate).localeCompare(String(b.x.incidentDate)));
+    const map = new Map();
+    for (const ln of lines) {
+      const k = ln.x.driverId || ln.x.driverName;
+      if (!map.has(k)) map.set(k, { name: ln.x.driverName, depot: (driverById(ln.x.driverId) || {}).depot || ln.x.depot, ded: 0, refund: 0, paused: 0, claims: 0, unsigned: 0, balance: 0, seen: new Set() });
+      const r = map.get(k);
+      if (ln.kind === "deduct") { r.ded += ln.amount; if (ln.x.unsigned) r.unsigned++; }
+      if (ln.kind === "refund") r.refund += ln.amount;
+      if (ln.kind === "paused") r.paused++;
+      if (!r.seen.has(ln.x.id)) { r.seen.add(ln.x.id); r.claims++; }
+    }
+    // outstanding after this period, per driver
+    for (const x of allCalc()) {
+      if (!inScope(x, scope)) continue;
+      const k = x.driverId || x.driverName;
+      if (!map.has(k)) continue;
+      if (x.dWon) continue;
+      const after = r2(x.share - x.paidBefore - x.lines.filter((l) => !l.paused && l.start <= p.start).reduce((a, l) => a + l.amount, 0));
+      map.get(k).balance += Math.max(after, 0);
+    }
+    const rows = [...map.values()].map((r) => ({ ...r, net: r2(r.ded - r.refund) })).sort((a, b) => a.name.localeCompare(b.name));
+    // P&L: claims with incident date in this period
+    const pnl = allCalc().filter((x) => inScope(x, scope) && isDate(x.incidentDate) && x.incidentDate >= p.start && x.incidentDate <= p.end);
+    return { p, lines, rows, pnl };
+  }
+
+  function renderWages() {
+    ui.wScope = scopeOptions($("wScope"), ui.wScope);
+    const { p, lines, rows, pnl } = periodData(ui.wDate, ui.wScope);
+    const isNow = periodInfo(todayS()).start === p.start;
+    $("wTitle").textContent = periodLabel(p) + (isNow ? " (this period)" : "");
+    $("wToday").hidden = isNow;
+    const ded = r2(rows.reduce((a, r) => a + r.ded, 0)), ref = r2(rows.reduce((a, r) => a + r.refund, 0));
+    const paused = lines.filter((l) => l.kind === "paused").length;
+    const unsigned = lines.filter((l) => l.kind === "deduct" && l.x.unsigned).length;
+    const absorbed = r2(pnl.reduce((a, x) => a + x.absorbed, 0));
+    $("wTiles").innerHTML = `
+      <div class="tile main"><span class="eyebrow">Off wages this period</span><b>${money(ded)}</b><small>${rows.filter((r) => r.ded > 0.004).length} driver${rows.filter((r) => r.ded > 0.004).length === 1 ? "" : "s"}</small></div>
+      <div class="tile plus"><span class="eyebrow">Refunds to drivers</span><b>${money(ref)}</b><small>won disputes</small></div>
+      <div class="tile ${paused ? "warn" : ""}"><span class="eyebrow">Paused</span><b>${paused}</b><small>claim${paused === 1 ? "" : "s"} on hold this period</small></div>
+      <div class="tile ${unsigned ? "warn" : ""}"><span class="eyebrow">Deducting without signature</span><b>${unsigned}</b><small>claim${unsigned === 1 ? "" : "s"} to get signed</small></div>
+      <div class="tile minus"><span class="eyebrow">Absorbed by the business</span><b>${money(absorbed)}</b><small>${pnl.length} claim${pnl.length === 1 ? "" : "s"} with an incident this period</small></div>`;
+    $("wMeta").textContent = `${esc(scopeName(ui.wScope))} · deductions are taken on the last day, ${medD(p.end)}`;
+    $("wTable").innerHTML = `<thead><tr><th class="l">Driver</th><th class="l">Depot</th><th>Claims</th><th>Deductions</th><th>Refunds</th><th>Net off wages</th><th>Paused</th><th>Still owed after</th><th class="l">Flags</th></tr></thead>` + (rows.length
+      ? `<tbody>${rows.map((r) => `<tr><td class="l name">${esc(r.name)}</td><td class="l">${esc(r.depot)}</td><td>${r.claims}</td><td>${mOrDash(r.ded)}</td><td class="${r.refund ? "pos" : ""}">${mOrDash(r.refund)}</td><td class="${r.net > 0.004 ? "neg" : r.net < -0.004 ? "pos" : ""}">${money(r.net)}</td><td>${r.paused || "–"}</td><td>${mOrDash(r.balance)}</td><td class="l">${r.unsigned ? `<span class="chip bad">${r.unsigned} not signed</span>` : ""}</td></tr>`).join("")}</tbody>
+         <tfoot><tr><td>Total</td><td></td><td>${rows.reduce((a, r) => a + r.claims, 0)}</td><td>${money(ded)}</td><td>${mOrDash(ref)}</td><td>${money(ded - ref)}</td><td>${paused || "–"}</td><td>${mOrDash(rows.reduce((a, r) => a + r.balance, 0))}</td><td></td></tr></tfoot>`
+      : `<tbody><tr><td class="l" colspan="9"><span class="small">No deductions, pauses or refunds in this pay period.</span></td></tr></tbody>`);
+    $("wLines").innerHTML = `<thead><tr><th class="l">Driver</th><th class="l">Claim</th><th class="l">FD / email</th><th class="l">Depot</th><th class="l">What</th><th>Amount</th><th class="l">Why</th></tr></thead>` + (lines.length
+      ? `<tbody>${lines.map((ln) => {
+          const x = ln.x;
+          const what = ln.kind === "deduct" ? `<span class="chip">${esc(PAYLOG_TYPE(x.type))}</span>` : ln.kind === "refund" ? `<span class="chip ok">Top up (refund)</span>` : `<span class="chip warn">Paused</span>`;
+          const why = ln.kind === "deduct" ? (x.payment === "plan" ? `Instalment ${ln.l.n} of ${ln.l.of}` : "Paid in full") + (x.unsigned ? " · not signed" : "") : ln.kind === "refund" ? `Dispute won ${shortD(x.outcomeDate)}` : ln.l.paused;
+          return `<tr class="click${ln.kind === "paused" ? " dim" : ""}" data-open="${esc(x.id)}"><td class="l name">${esc(x.driverName)}</td><td class="l">${typeChip(x.type)} <span class="small">${esc(shortD(x.incidentDate))}${x.dpdRef ? " · " + esc(x.dpdRef) : ""}</span></td><td class="l">${fdCell(x)}</td><td class="l">${esc(x.depot)}</td><td class="l">${what}</td><td class="${ln.kind === "refund" ? "pos" : ""}">${ln.kind === "paused" ? "–" : money(ln.amount)}</td><td class="l">${esc(why)}</td></tr>`;
+        }).join("")}</tbody>`
+      : `<tbody><tr><td class="l" colspan="7"><span class="small">Nothing this pay period.</span></td></tr></tbody>`);
+
+    // trend: last 13 periods
+    const trend = [];
+    for (let i = 12; i >= 0; i--) {
+      const d = periodData(addDays(p.start, -28 * i), ui.wScope);
+      trend.push({ p: d.p, ded: d.rows.reduce((a, r) => a + r.ded, 0), ref: d.rows.reduce((a, r) => a + r.refund, 0), n: d.pnl.length, charged: d.pnl.reduce((a, x) => a + x.total, 0), absorbed: d.pnl.reduce((a, x) => a + x.absorbed, 0), paused: d.lines.filter((l) => l.kind === "paused").length });
+    }
+    $("wTrend").innerHTML = `<thead><tr><th class="l">Pay period</th><th>New claims</th><th>Charged</th><th>Absorbed</th><th>Off wages</th><th>Refunds</th><th>Paused</th></tr></thead><tbody>` +
+      trend.map((r) => `<tr class="click${r.p.start === p.start ? " sel" : ""}" data-period="${r.p.start}"><td class="l">${esc(periodLabel(r.p))}</td><td>${r.n || "–"}</td><td>${mOrDash(r.charged)}</td><td>${mOrDash(r.absorbed)}</td><td>${mOrDash(r.ded)}</td><td>${mOrDash(r.ref)}</td><td>${r.paused || "–"}</td></tr>`).join("") +
+      `</tbody><tfoot><tr><td>Total</td><td>${trend.reduce((a, r) => a + r.n, 0)}</td><td>${money(trend.reduce((a, r) => a + r.charged, 0))}</td><td>${money(trend.reduce((a, r) => a + r.absorbed, 0))}</td><td>${money(trend.reduce((a, r) => a + r.ded, 0))}</td><td>${money(trend.reduce((a, r) => a + r.ref, 0))}</td><td></td></tr></tfoot>`;
+  }
+
+  // ---------- exports ----------
+  async function saveCsv(rows, filename, msgEl) {
+    const cell = (v) => { const s = String(v ?? ""); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+    const data = "﻿" + rows.map((r) => r.map(cell).join(",")).join("\r\n");
+    if (S.dl) {
+      try { await S.dl.save({ filename, data }); setMsg(msgEl, "File ready.", "ok"); }
+      catch (err) { if (!err || err.code !== "declined") setMsg(msgEl, "Couldn't create the file. Try again.", "err"); }
+      return;
+    }
+    try {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([data], { type: "text/csv;charset=utf-8" }));
+      a.download = filename; document.body.appendChild(a); a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+      setMsg(msgEl, "File ready.", "ok");
+    } catch (_) { setMsg(msgEl, "Downloads aren't available here.", "err"); }
+  }
+  const claimTag = (x) => `${TYPES[x.type] || x.type} ${shortD(x.incidentDate)}${x.dpdRef ? ", DPD ref " + x.dpdRef : ""}${x.tracking ? ", parcel " + x.tracking : ""}${x.vanKey ? ", van " + regShow(x.vanReg) : ""}`;
+
+  function exportWages() {
+    const { p, lines } = periodData(ui.wDate, ui.wScope);
+    const rows = [["Date", "Driver", "Type", "Amount", "Note", "FD", "FD email", "Depot"]];
+    for (const ln of lines) {
+      const x = ln.x;
+      if (ln.kind === "deduct") {
+        const left = r2(x.share - x.paidBefore - x.lines.filter((l) => !l.paused && l.start <= p.start).reduce((a, l) => a + l.amount, 0));
+        rows.push([p.end, x.driverName, PAYLOG_TYPE(x.type), ln.amount.toFixed(2), `${claimTag(x)}. ${x.payment === "plan" ? `Instalment ${ln.l.n} of ${ln.l.of}, ${money(Math.max(left, 0))} left` : "Paid in full"}${x.unsigned ? ". NOT SIGNED" : ""}`, x.fdCode, x.fdEmail, x.depot]);
+      } else if (ln.kind === "refund") {
+        rows.push([p.end, x.driverName, "Top up", ln.amount.toFixed(2), `Refund: dispute won on ${claimTag(x)}`, x.fdCode, x.fdEmail, x.depot]);
+      }
+    }
+    if (rows.length === 1) { setMsg($("wMsg"), "Nothing to deduct this pay period.", ""); return; }
+    saveCsv(rows, `damages-claims-wages-${p.start}.csv`, $("wMsg"));
+  }
+  function exportPnl() {
+    const { p, pnl } = periodData(ui.wDate, ui.wScope);
+    const rows = [["Date", "FD", "FD email", "Depot", "Van damages (cost to business)", "Total charged", "Insurer pays", "Driver share", "Type", "Driver", "DPD ref", "Van reg", "Status"]];
+    for (const x of pnl.slice().sort((a, b) => a.incidentDate.localeCompare(b.incidentDate))) rows.push([x.incidentDate, x.fdCode, x.fdEmail, x.depot, x.absorbed.toFixed(2), x.total.toFixed(2), x.insurer.toFixed(2), x.effShare.toFixed(2), TYPES[x.type], x.driverName, x.dpdRef || "", regShow(x.vanReg), x.closed ? "Closed" : "Open"]);
+    if (rows.length === 1) { setMsg($("wMsg"), "No claims with an incident in this pay period.", ""); return; }
+    saveCsv(rows, `damages-claims-pnl-${p.start}.csv`, $("wMsg"));
+  }
+  async function copySummary() {
+    const { p, rows, lines } = periodData(ui.wDate, ui.wScope);
+    const out = [`Damages and claims deductions, pay period ${periodLabel(p)}`];
+    for (const r of rows) {
+      const bits = [];
+      if (r.ded > 0.004) bits.push(`${money(r.ded)} off wages`);
+      if (r.refund > 0.004) bits.push(`${money(r.refund)} refund`);
+      if (r.paused) bits.push(`${r.paused} paused`);
+      if (r.unsigned) bits.push(`${r.unsigned} NOT SIGNED`);
+      if (bits.length) out.push(`${r.name}: ${bits.join(", ")}`);
+    }
+    if (!lines.length) out.push("No deductions this pay period.");
+    const text = out.join("\n");
+    try { await navigator.clipboard.writeText(text); setMsg($("wMsg"), "Summary copied.", "ok"); }
+    catch (_) { setMsg($("wMsg"), text, ""); }
+  }
+  const CSV_HEAD = ["Incident date", "Date reported", "Driver", "FD", "FD email", "Depot", "Route", "Van reg", "Type", "DPD claim ref", "Parcel tracking", "Description", "Evidence link", "Total charged", "Insurance claim", "Excess", "Insurer pays", "Driver share", "Absorbed by business", "Signed agreement", "Payment", "Instalments", "Per pay period", "First deduction period", "Paid so far", "Balance", "Disputed", "Disputed by", "Dispute raised", "Dispute status", "Outcome date", "Dispute notes", "Refund", "Status", "Flag"];
+  const csvRow = (x) => [x.incidentDate, x.reportedDate, x.driverName, x.fdCode, x.fdEmail, x.depot, x.route || "", regShow(x.vanReg), TYPES[x.type], x.dpdRef || "", x.tracking || "", x.description || "", x.evidenceUrl || "", x.total.toFixed(2), x.insured ? "Y" : "N", x.excess !== null ? x.excess.toFixed(2) : "", x.insurer.toFixed(2), x.share.toFixed(2), x.absorbed.toFixed(2), x.share > 0.004 ? (x.signed ? "Y" : "N") : "", x.share > 0.004 ? (x.payment === "plan" ? "Payment plan" : "In full") : "", x.share > 0.004 ? x.instalments : "", x.share > 0.004 ? x.per.toFixed(2) : "", x.lines[0] ? x.lines[0].start : "", x.recovered.toFixed(2), x.balance.toFixed(2), x.disputed ? "Y" : "N", x.disputed ? (x.by === "driver" ? "Driver" : "DPD / third party") : "", x.disputed ? x.disputeRaised || "" : "", x.disputed ? x.dStatus : "", x.disputed && !x.dOpen ? x.outcomeDate || "" : "", x.disputed ? x.disputeNotes || "" : "", x.refund ? x.refund.toFixed(2) : "", x.closed ? "Closed" : "Open", x.unsigned ? "Deduction not signed" : ""];
+  function exportReport() {
+    const list = allCalc().filter((x) => inScope(x, ui.scope) && statusOk(x, ui.status));
+    saveCsv([CSV_HEAD, ...list.map(csvRow)], `damages-claims-report-${todayS()}.csv`, $("dashMsg"));
+  }
+  function exportClaims() {
+    const rows = [...$("cTable").querySelectorAll("tr[data-open]")].map((tr) => allCalc().find((x) => x.id === tr.dataset.open)).filter(Boolean);
+    saveCsv([CSV_HEAD, ...rows.map(csvRow)], `damages-claims-${todayS()}.csv`, $("cMsg"));
+  }
+
+  // ============================================================ LOG A CLAIM
+  function fillPickers() {
+    const keep = (sel, html, v) => { sel.innerHTML = html; if (v !== undefined) sel.value = v; };
+    const editingDoc = ui.editing && S.claims.find((c) => c.id === ui.editing);
+    const dv = $("fDriver").value, fv = $("fFd").value;
+    const drivers = byName(S.drivers.filter((d) => d.active !== false || (editingDoc && editingDoc.driverId === d.id)), "name");
+    keep($("fDriver"), `<option value="">${drivers.length ? "Pick a driver" : "Add drivers under FDs, drivers & rules"}</option>` + drivers.map((d) => `<option value="${esc(d.id)}">${esc(d.name)}${d.depot ? " · " + esc(d.depot) : ""}</option>`).join(""), dv);
+    const fds = S.fds.filter((f) => f.active !== false || (editingDoc && editingDoc.fdId === f.id));
+    const depots = [...new Set((S.settings.depots || []).concat(fds.map((f) => f.depot)))];
+    keep($("fFd"), `<option value="">${fds.length ? "Pick an FD" : "Add FDs under FDs, drivers & rules"}</option>` + depots.map((dep) => { const g = byName(fds.filter((f) => f.depot === dep), "code"); return g.length ? `<optgroup label="${esc(dep)}">${g.map((f) => `<option value="${esc(f.id)}">${esc(f.code)} · ${esc(f.email)}</option>`).join("")}</optgroup>` : ""; }).join(""), fv);
+    const uniq = (arr) => [...new Map(arr.filter(Boolean).map((v) => [String(v).trim().toUpperCase(), String(v).trim()])).values()].sort();
+    $("dlRoutes").innerHTML = uniq(S.claims.map((c) => c.route)).map((v) => `<option value="${esc(v)}">`).join("");
+    $("dlVans").innerHTML = uniq(S.claims.map((c) => regShow(c.vanReg))).map((v) => `<option value="${esc(v)}">`).join("");
+  }
+
+  const payVal = () => ($("pPlan").checked ? "plan" : "full");
+  const dstatVal = () => ($("dWon").checked ? "won" : $("dLost").checked ? "lost" : "open");
+  function formDoc() {
+    const drv = driverById($("fDriver").value), fd = fdById($("fFd").value);
+    const van = regShow($("fVan").value);
+    return {
+      incidentDate: $("fIncident").value, reportedDate: $("fReported").value, type: $("fType").value,
+      driverId: drv ? drv.id : "", driver: drv ? drv.name : "",
+      fdId: fd ? fd.id : "", fd: fd ? fd.code : "", fdEmail: fd ? fd.email : "", depot: fd ? fd.depot : (drv ? drv.depot : ""),
+      route: $("fRoute").value.trim(), vanReg: van, dpdRef: $("fRef").value.trim(), tracking: $("fTrack").value.trim(),
+      description: $("fDesc").value.trim(), evidenceUrl: $("fLink").value.trim(),
+      total: $("fTotal").value === "" ? "" : num($("fTotal").value), insured: $("fInsured").checked,
+      excess: $("fInsured").checked && $("fExcess").value !== "" ? num($("fExcess").value) : null,
+      driverShare: $("fShare").value === "" ? 0 : num($("fShare").value), signed: $("fSigned").checked,
+      payment: payVal(), instalments: payVal() === "plan" && $("fN").value !== "" ? Math.round(num($("fN").value)) : null,
+      perPeriod: payVal() === "plan" && $("fPer").value !== "" ? num($("fPer").value) : null,
+      startDate: $("fStart").value ? periodInfo($("fStart").value).start : "", paidBefore: $("fPaidBefore").value === "" ? 0 : num($("fPaidBefore").value),
+      disputed: $("fDisputed").checked, disputeWith: $("fDispWith").value, disputeRaised: $("fDisputed").checked ? $("fDispRaised").value : "",
+      disputeStatus: $("fDisputed").checked ? dstatVal() : "", outcomeDate: $("fDisputed").checked && dstatVal() !== "open" ? $("fOutcome").value : "",
+      disputeNotes: $("fDisputed").checked ? $("fDispNotes").value.trim() : "",
+    };
+  }
+  function shareCap() { const t = num($("fTotal").value); return $("fInsured").checked && $("fExcess").value !== "" ? Math.min(num($("fExcess").value), t) : t; }
+  function planRemaining() { return r2(Math.min(num($("fShare").value), shareCap()) - num($("fPaidBefore").value)); }
+  function syncFormVis() {
+    $("excessWrap").hidden = !$("fInsured").checked;
+    $("planRow").hidden = payVal() !== "plan";
+    $("disputeBox").hidden = !$("fDisputed").checked;
+    $("outcomeWrap").hidden = dstatVal() === "open";
+    const fd = fdById($("fFd").value);
+    $("fdLine").textContent = fd ? `Depot: ${fd.depot} · Email: ${fd.email}` : "The depot and email come from the FD.";
+    const s = $("fStart").value;
+    $("startNote").textContent = s ? `Deductions start in the pay period ${periodLabel(periodInfo(s))}.` : "Leave blank to start in the pay period the claim was reported.";
+  }
+  function updatePreview() {
+    syncFormVis();
+    const doc = formDoc();
+    const box = $("preview");
+    if (doc.total === "") { box.innerHTML = `<p class="note">Enter the total amount charged to see who pays what.</p>`; $("previewSched").innerHTML = ""; return; }
+    const x = calc({ ...doc, id: ui.editing || "_draft" });
+    const L = (k, v, cls) => `<div class="line"><span>${k}</span><b class="${cls || ""}">${v}</b></div>`;
+    const flags = [];
+    if (num($("fShare").value) > x.cost + 0.004) flags.push(`<div class="flag">Driver's share is more than the ${x.insured ? "excess" : "total"} (${money(x.cost)}). It will be capped.</div>`);
+    if (x.unsigned) flags.push(`<div class="flag">⚠ ${money(x.share)} comes off wages but the driver hasn't signed an agreement to the deduction.${S.settings.holdUnsigned ? " Deductions are held until it's signed." : ""}</div>`);
+    if (x.dOpen) flags.push(`<div class="flag warn">Dispute open: deductions are paused until it's resolved.</div>`);
+    if (x.dWon) flags.push(`<div class="flag warn">Dispute won: ${x.by === "driver" ? "the business covers the driver's share" : "the charge is cancelled"}${x.refund > 0.004 ? `; ${money(x.refund)} already taken is refunded to the driver` : ""}. Claim closes.</div>`);
+    box.innerHTML = `<div class="preview">
+      ${L("Total charged", money(x.total))}
+      ${x.insured ? L("Insurer pays", money(x.insurer)) + L("Excess (cost to business)", money(x.cost)) : ""}
+      ${L("Driver's share", money(x.effShare))}
+      ${L("Absorbed by the business", money(x.absorbed), "neg")}
+      ${x.share > 0.004 ? L("Paid back so far", money(x.recovered), "pos") + L("Balance remaining", money(x.balance)) : ""}
+      ${L("Claim status", x.closed ? "Closed" : "Open")}
+    </div>${flags.length ? `<div class="form" style="margin-top:10px">${flags.join("")}</div>` : ""}`;
+    $("previewSched").innerHTML = schedTable(x);
+  }
+
+  function resetForm() {
+    ui.editing = null;
+    $("claimForm").reset();
+    const t = todayS();
+    $("fIncident").value = t; $("fReported").value = t; $("fStart").value = "";
+    $("formTitle").textContent = "Log a claim";
+    $("saveBtn").textContent = "Save claim";
+    $("cancelEdit").hidden = true;
+    fillPickers();
+    updatePreview();
+  }
+  function startEdit(id) {
+    const c = S.claims.find((x) => x.id === id); if (!c) return;
+    showTab("log");
+    ui.editing = id;
+    fillPickers();
+    $("fIncident").value = c.incidentDate || ""; $("fReported").value = c.reportedDate || ""; $("fType").value = c.type || "van";
+    $("fDriver").value = c.driverId || ""; $("fFd").value = c.fdId || "";
+    $("fRoute").value = c.route || ""; $("fVan").value = c.vanReg || ""; $("fRef").value = c.dpdRef || ""; $("fTrack").value = c.tracking || "";
+    $("fDesc").value = c.description || ""; $("fLink").value = c.evidenceUrl || "";
+    $("fTotal").value = has(c.total) ? c.total : ""; $("fInsured").checked = !!c.insured; $("fExcess").value = has(c.excess) ? c.excess : "";
+    $("fShare").value = has(c.driverShare) ? c.driverShare : ""; $("fSigned").checked = !!c.signed;
+    $("pPlan").checked = c.payment === "plan"; $("pFull").checked = c.payment !== "plan";
+    $("fN").value = has(c.instalments) ? c.instalments : ""; $("fPer").value = has(c.perPeriod) ? c.perPeriod : "";
+    $("fStart").value = c.startDate || ""; $("fPaidBefore").value = has(c.paidBefore) && num(c.paidBefore) ? c.paidBefore : "";
+    $("fDisputed").checked = !!c.disputed; $("fDispWith").value = c.disputeWith === "driver" ? "driver" : "dpd";
+    $("fDispRaised").value = c.disputeRaised || "";
+    $("dOpen").checked = !c.disputeStatus || c.disputeStatus === "open"; $("dWon").checked = c.disputeStatus === "won"; $("dLost").checked = c.disputeStatus === "lost";
+    $("fOutcome").value = c.outcomeDate || ""; $("fDispNotes").value = c.disputeNotes || "";
+    $("formTitle").textContent = "Edit claim";
+    $("saveBtn").textContent = "Save changes";
+    $("cancelEdit").hidden = false;
+    setMsg($("formMsg"), "");
+    updatePreview();
+  }
+
+  async function saveClaim(e) {
+    e.preventDefault();
+    const msg = $("formMsg");
+    if (!S.canWrite || !S.db) { setMsg(msg, "You can't change this log.", "err"); return; }
+    const d = formDoc();
+    const missing = [];
+    if (!isDate(d.incidentDate)) missing.push("date of incident");
+    if (!isDate(d.reportedDate)) missing.push("date reported");
+    if (!d.driverId) missing.push("driver");
+    if (!d.fdId) missing.push("FD");
+    if (!d.description) missing.push("short description");
+    if (d.total === "" || !(d.total >= 0)) missing.push("total amount charged");
+    if (missing.length) { setMsg(msg, "Add the " + missing.join(", ") + ".", "err"); return; }
+    if (d.reportedDate < d.incidentDate) { setMsg(msg, "The date reported can't be before the incident.", "err"); return; }
+    const cost = d.insured && d.excess !== null ? Math.min(d.excess, d.total) : d.total;
+    if (d.driverShare < 0 || d.driverShare > cost + 0.004) { setMsg(msg, `The driver's share must be between £0 and ${money(cost)}.`, "err"); return; }
+    if (d.paidBefore < 0 || d.paidBefore > d.driverShare + 0.004) { setMsg(msg, "“Already paid back” can't be more than the driver's share.", "err"); return; }
+    if (d.evidenceUrl && !safeUrl(d.evidenceUrl)) { setMsg(msg, "The evidence link should start with https://", "err"); return; }
+    if (d.driverShare > 0.004 && d.payment === "plan" && !(d.perPeriod > 0)) { setMsg(msg, "Set the number of instalments or the amount per pay period.", "err"); return; }
+    if (d.disputed) {
+      if (!isDate(d.disputeRaised)) { setMsg(msg, "Add the date the dispute was raised.", "err"); return; }
+      if (d.disputeStatus !== "open" && !isDate(d.outcomeDate)) { setMsg(msg, "Add the outcome date.", "err"); return; }
+      if (d.disputeStatus !== "open" && d.outcomeDate < d.disputeRaised) { setMsg(msg, "The outcome date can't be before the dispute was raised.", "err"); return; }
+    }
+    if (d.payment === "plan" && d.perPeriod > 0) d.instalments = Math.ceil(r2(d.driverShare - d.paidBefore) / d.perPeriod - 1e-9);
+    if (!d.startDate) d.startDate = periodInfo(d.reportedDate).start;
+    d.savedAt = new Date().toISOString();
+    $("saveBtn").disabled = true;
+    try {
+      const col = S.db.collection("claims");
+      if (ui.editing) await col.doc(ui.editing).set(d); else await col.add(d);
+      const wasEdit = !!ui.editing;
+      resetForm();
+      setMsg(msg, wasEdit ? "Changes saved." : "Claim saved.", "ok");
+    } catch (err) { setMsg(msg, writeErr(err), "err"); }
+    finally { $("saveBtn").disabled = !S.canWrite; }
+  }
+  async function deleteClaim(btn, msgEl) {
+    if (!arm(btn)) return;
+    try {
+      await S.db.collection("claims").doc(btn.dataset.del).delete();
+      if (ui.editing === btn.dataset.del) resetForm();
+      if (ui.detail === btn.dataset.del) ui.detail = null;
+      setMsg(msgEl, "Deleted.", "ok");
+    } catch (_) { setMsg(msgEl, "Couldn't delete. Try again.", "err"); }
+  }
+
+  function renderLog() {
+    fillPickers();
+    updatePreview();
+    const recent = allCalc().slice().sort((a, b) => String(b.reportedDate).localeCompare(String(a.reportedDate)) || String(b.savedAt || "").localeCompare(String(a.savedAt || ""))).slice(0, 10);
+    $("recentTable").innerHTML = recent.length
+      ? `<thead><tr><th class="l">Reported</th><th class="l">Driver</th><th class="l">Type</th><th>Total</th><th>Driver share</th><th class="l">Status</th><th></th></tr></thead><tbody>` +
+        recent.map((x) => `<tr class="${ui.editing === x.id ? "sel" : ""}"><td class="l">${esc(shortD(x.reportedDate))}</td><td class="l name">${esc(x.driverName)}</td><td class="l">${typeChip(x.type)}</td><td>${money(x.total)}</td><td>${mOrDash(x.share)}</td><td class="l">${statusChips(x)}</td><td><div class="rowbtns"><button class="mini" type="button" data-edit="${esc(x.id)}">Edit</button></div></td></tr>`).join("") + `</tbody>`
+      : `<tbody><tr><td class="l"><span class="small">Nothing logged yet.</span></td></tr></tbody>`;
+  }
+
+  // ============================================================ SETTINGS
+  function depotOptions(sel, v) {
+    const deps = S.settings.depots || [];
+    sel.innerHTML = deps.map((d) => `<option value="${esc(d)}">${esc(d)}</option>`).join("");
+    if (v && deps.includes(v)) sel.value = v;
+  }
+  function renderSettings() {
+    const cnt = (k, id) => S.claims.filter((c) => c[k] === id).length;
+    $("fdList").innerHTML = S.fds.length
+      ? `<thead><tr><th class="l">FD</th><th class="l">Email</th><th class="l">Depot</th><th>Claims</th><th class="l">Status</th><th></th></tr></thead><tbody>` +
+        byName(S.fds, "code").map((f) => `<tr class="${f.active === false ? "dim" : ""}"><td class="l name">${esc(f.code)}</td><td class="l">${esc(f.email)}</td><td class="l">${esc(f.depot)}</td><td>${cnt("fdId", f.id) || "–"}</td><td class="l">${f.active === false ? "Inactive" : "Active"}</td><td><div class="rowbtns"><button class="mini" type="button" data-xedit="${esc(f.id)}">Edit</button><button class="mini" type="button" data-xdel="${esc(f.id)}">Delete</button></div></td></tr>`).join("") + `</tbody>`
+      : `<tbody><tr><td class="l"><span class="small">No FDs yet. Add each FD with its email and depot.</span></td></tr></tbody>`;
+    $("drvList").innerHTML = S.drivers.length
+      ? `<thead><tr><th class="l">Driver</th><th class="l">Depot</th><th class="l">Usual FD</th><th>Claims</th><th class="l">Status</th><th></th></tr></thead><tbody>` +
+        byName(S.drivers, "name").map((d) => { const f = fdById(d.fdId); return `<tr class="${d.active === false ? "dim" : ""}"><td class="l name">${esc(d.name)}</td><td class="l">${esc(d.depot)}</td><td class="l">${f ? esc(f.code) : "–"}</td><td>${cnt("driverId", d.id) || "–"}</td><td class="l">${d.active === false ? "Inactive" : "Active"}</td><td><div class="rowbtns"><button class="mini" type="button" data-dedit="${esc(d.id)}">Edit</button><button class="mini" type="button" data-ddel="${esc(d.id)}">Delete</button></div></td></tr>`; }).join("") + `</tbody>`
+      : `<tbody><tr><td class="l"><span class="small">No drivers yet.</span></td></tr></tbody>`;
+    if (!ui.editingFd) { const v = $("xDepot").value; depotOptions($("xDepot"), v); }
+    if (!ui.editingDriver) {
+      const v = $("dDepot").value; depotOptions($("dDepot"), v);
+      const fv = $("dFd").value;
+      $("dFd").innerHTML = `<option value="">None</option>` + byName(S.fds.filter((f) => f.active !== false), "code").map((f) => `<option value="${esc(f.id)}">${esc(f.code)} · ${esc(f.depot)}</option>`).join("");
+      $("dFd").value = fv;
+    }
+    ruleSummary();
+  }
+  function ruleSummary() {
+    const s = S.settings, p = periodInfo(todayS());
+    $("ruleSummary").innerHTML = `<p>Pay periods run 4 weeks from ${esc(medD(s.periodStart))} (same as the Driver Pay Log). This one: <b>${esc(periodLabel(p))}</b>.</p>
+      <p>Each claim's deduction is taken once per pay period, on its last day, until the driver's share is paid. Open disputes pause it.</p>
+      <p>${s.holdUnsigned ? "Claims with no signed agreement are <b>held</b>: nothing comes off wages until it's signed." : "Claims with no signed agreement are <b>flagged</b> but still deducted."}</p>`;
+  }
+  function fillRulesForm() {
+    $("rStart").value = S.settings.periodStart;
+    $("rDepots").value = (S.settings.depots || []).join(", ");
+    $("rHold").checked = !!S.settings.holdUnsigned;
+    ruleSummary();
+  }
+  async function saveRules(e) {
+    e.preventDefault();
+    const msg = $("rMsg");
+    const start = $("rStart").value;
+    const depots = [...new Set($("rDepots").value.split(",").map((s) => s.trim()).filter(Boolean))];
+    if (!isDate(start) || !depots.length) { setMsg(msg, "Add the start date and at least one depot.", "err"); return; }
+    try { await S.db.doc("settings/main").set({ periodStart: start, depots, holdUnsigned: $("rHold").checked }); setMsg(msg, "Saved.", "ok"); }
+    catch (err) { setMsg(msg, writeErr(err), "err"); }
+  }
+
+  function resetFdForm() { ui.editingFd = null; $("fdForm").reset(); $("xActive").checked = true; $("xSubmit").textContent = "Add FD"; $("xCancel").hidden = true; renderSettings(); }
+  function editFd(id) {
+    const f = fdById(id); if (!f) return;
+    ui.editingFd = id; depotOptions($("xDepot"), f.depot);
+    $("xCode").value = f.code; $("xEmail").value = f.email; $("xDepot").value = f.depot; $("xActive").checked = f.active !== false;
+    $("xSubmit").textContent = "Save FD"; $("xCancel").hidden = false; $("xCode").focus();
+  }
+  async function submitFd(e) {
+    e.preventDefault();
+    const msg = $("xMsg");
+    const doc = { code: $("xCode").value.trim(), email: $("xEmail").value.trim(), depot: $("xDepot").value, active: $("xActive").checked };
+    if (!doc.code || !doc.email || !doc.depot) { setMsg(msg, "Add the FD number, email and depot.", "err"); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(doc.email)) { setMsg(msg, "That email doesn't look right.", "err"); return; }
+    if (S.fds.some((f) => f.id !== ui.editingFd && f.code.toLowerCase() === doc.code.toLowerCase())) { setMsg(msg, "There's already an FD with that number.", "err"); return; }
+    try {
+      if (ui.editingFd) await S.db.collection("fds").doc(ui.editingFd).set(doc); else await S.db.collection("fds").add(doc);
+      setMsg(msg, `Saved ${doc.code}.`, "ok"); resetFdForm();
+    } catch (err) { setMsg(msg, writeErr(err), "err"); }
+  }
+  async function deleteFd(btn) {
+    const f = fdById(btn.dataset.xdel); if (!f) return;
+    if (S.claims.some((c) => c.fdId === f.id)) { setMsg($("xMsg"), `${f.code} has claims logged against it. Untick “Active” instead so it stays on those claims.`, "err"); return; }
+    if (!arm(btn)) return;
+    try { await S.db.collection("fds").doc(f.id).delete(); setMsg($("xMsg"), `Deleted ${f.code}.`, "ok"); } catch (_) { setMsg($("xMsg"), "Couldn't delete. Try again.", "err"); }
+  }
+
+  function resetDriverForm() { ui.editingDriver = null; $("drvForm").reset(); $("dActive").checked = true; $("dSubmit").textContent = "Add driver"; $("dCancel").hidden = true; renderSettings(); }
+  function editDriver(id) {
+    const d = driverById(id); if (!d) return;
+    ui.editingDriver = id; depotOptions($("dDepot"), d.depot);
+    $("dFd").innerHTML = `<option value="">None</option>` + byName(S.fds, "code").map((f) => `<option value="${esc(f.id)}">${esc(f.code)} · ${esc(f.depot)}</option>`).join("");
+    $("dName").value = d.name; $("dDepot").value = d.depot; $("dFd").value = d.fdId || ""; $("dActive").checked = d.active !== false;
+    $("dSubmit").textContent = "Save driver"; $("dCancel").hidden = false; $("dName").focus();
+  }
+  async function submitDriver(e) {
+    e.preventDefault();
+    const msg = $("dMsg");
+    const doc = { name: $("dName").value.trim().replace(/\s+/g, " "), depot: $("dDepot").value, fdId: $("dFd").value || "", active: $("dActive").checked };
+    if (!doc.name || !doc.depot) { setMsg(msg, "Add the driver's name and depot. If the depot list is empty, add depots under the rules below.", "err"); return; }
+    if (S.drivers.some((d) => d.id !== ui.editingDriver && d.name.toLowerCase() === doc.name.toLowerCase())) { setMsg(msg, "There's already a driver with that name.", "err"); return; }
+    try {
+      if (ui.editingDriver) await S.db.collection("drivers").doc(ui.editingDriver).set(doc); else await S.db.collection("drivers").add(doc);
+      setMsg(msg, `Saved ${doc.name}.`, "ok"); resetDriverForm();
+    } catch (err) { setMsg(msg, writeErr(err), "err"); }
+  }
+  async function deleteDriver(btn) {
+    const d = driverById(btn.dataset.ddel); if (!d) return;
+    if (S.claims.some((c) => c.driverId === d.id)) { setMsg($("dMsg"), `${d.name} has claims logged. Untick “Active” instead so their claims keep their name.`, "err"); return; }
+    if (!arm(btn)) return;
+    try { await S.db.collection("drivers").doc(d.id).delete(); setMsg($("dMsg"), `Deleted ${d.name}.`, "ok"); } catch (_) { setMsg($("dMsg"), "Couldn't delete. Try again.", "err"); }
+  }
+
+  // Browser-only store, used when the page is opened outside claude.ai. Same calls as the claude.ai database.
+  function localDb() {
+    const KEY = "damages-claims-log-v1";
+    let data = { claims: {}, drivers: {}, fds: {}, settings: {} };
+    try { const raw = localStorage.getItem(KEY); if (raw) data = Object.assign(data, JSON.parse(raw)); } catch (_) {}
+    const ls = new Set();
+    const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (_) {} ls.forEach((f) => f()); };
+    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    const docSnap = (id, v) => ({ id, exists: !!v, data: () => (v ? { ...v } : undefined) });
+    function query(coll) {
+      return { onSnapshot(next) { const run = () => next({ docs: Object.entries(data[coll] || {}).map(([id, v]) => docSnap(id, v)) }); ls.add(run); setTimeout(run, 0); return () => ls.delete(run); } };
+    }
+    const docRef = (coll, id) => ({
+      async set(v) { (data[coll] = data[coll] || {})[id] = JSON.parse(JSON.stringify(v)); persist(); },
+      async delete() { if (data[coll]) delete data[coll][id]; persist(); },
+      onSnapshot(next) { const run = () => next(docSnap(id, (data[coll] || {})[id])); ls.add(run); setTimeout(run, 0); return () => ls.delete(run); },
+    });
+    return {
+      collection: (coll) => Object.assign(query(coll), { doc: (id) => docRef(coll, id || uid()), async add(v) { const id = uid(); await docRef(coll, id).set(v); return { id }; } }),
+      doc: (path) => { const [c, id] = path.split("/"); return docRef(c, id); },
+    };
+  }
+
+  // ============================================================ WIRING
+  function render() {
+    if (ui.tab === "dashboard") renderDashboard();
+    else if (ui.tab === "log") renderLog();
+    else if (ui.tab === "wages") renderWages();
+    else if (ui.tab === "claims") renderClaims();
+    else if (ui.tab === "settings") renderSettings();
+  }
+  function showTab(tab) {
+    ui.tab = tab;
+    document.querySelectorAll(".nav button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
+    document.querySelectorAll(".panel").forEach((p) => { p.hidden = p.id !== "tab-" + tab; });
+    try { localStorage.setItem("dc-tab", tab); } catch (_) {}
+    render();
+    window.scrollTo(0, 0);
+  }
+  function openClaim(id) { ui.detail = id; ui.cStatus = "all"; ui.cSearch = ""; $("cSearch").value = ""; showTab("claims"); }
+
+  document.querySelector(".nav").addEventListener("click", (e) => { const b = e.target.closest("button[data-tab]"); if (b) showTab(b.dataset.tab); });
+  $("statusSeg").addEventListener("click", (e) => { const b = e.target.closest("button[data-status]"); if (!b) return; ui.status = b.dataset.status; try { localStorage.setItem("dc-status", ui.status); } catch (_) {} render(); });
+  $("scopeSel").addEventListener("change", (e) => { ui.scope = e.target.value; render(); });
+  $("exportReportBtn").addEventListener("click", exportReport);
+  for (const id of ["driverTable", "vanTable", "fdTable", "depotTable", "typeTable"]) $(id).addEventListener("click", (e) => {
+    const tr = e.target.closest("tr[data-scope]"); if (!tr) return;
+    ui.scope = ui.scope === tr.dataset.scope ? "ALL" : tr.dataset.scope; render(); window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+  for (const id of ["attnTable", "dClaims", "wLines"]) $(id).addEventListener("click", (e) => {
+    const ed = e.target.closest("[data-edit]"); if (ed) return startEdit(ed.dataset.edit);
+    if (e.target.closest("a")) return;
+    const tr = e.target.closest("tr[data-open]"); if (tr) openClaim(tr.dataset.open);
+  });
+
+  ["input", "change"].forEach((ev) => $("claimForm").addEventListener(ev, (e) => {
+    const id = e.target.id;
+    if (id === "fDriver" && e.type === "change") { const d = driverById(e.target.value); if (d && d.fdId && fdById(d.fdId)) $("fFd").value = d.fdId; }
+    if (id === "fN" && $("fN").value !== "") { const n = Math.max(1, Math.round(num($("fN").value))); const rem = planRemaining(); if (rem > 0) $("fPer").value = (Math.ceil(rem * 100 / n) / 100).toFixed(2); }
+    if (id === "fPer" && num($("fPer").value) > 0) { const rem = planRemaining(); $("fN").value = rem > 0 ? Math.ceil(rem / num($("fPer").value) - 1e-9) : ""; }
+    if (["fShare", "fTotal", "fExcess", "fInsured", "fPaidBefore", "pPlan"].includes(id) && payVal() === "plan" && $("fN").value !== "") { const n = Math.max(1, Math.round(num($("fN").value))); const rem = planRemaining(); $("fPer").value = rem > 0 ? (Math.ceil(rem * 100 / n) / 100).toFixed(2) : ""; }
+    if (id === "fDisputed" && $("fDisputed").checked && !$("fDispRaised").value) $("fDispRaised").value = todayS();
+    if ((id === "dWon" || id === "dLost") && !$("fOutcome").value) $("fOutcome").value = todayS();
+    updatePreview();
+  }));
+  $("claimForm").addEventListener("submit", saveClaim);
+  $("cancelEdit").addEventListener("click", () => { resetForm(); setMsg($("formMsg"), ""); });
+  $("recentTable").addEventListener("click", (e) => { const ed = e.target.closest("[data-edit]"); if (ed) startEdit(ed.dataset.edit); });
+
+  const setPeriod = (dir) => { ui.wDate = addDays(periodInfo(ui.wDate).start, dir * 28); render(); };
+  $("wPrev").addEventListener("click", () => setPeriod(-1));
+  $("wNext").addEventListener("click", () => setPeriod(1));
+  $("wToday").addEventListener("click", () => { ui.wDate = todayS(); render(); });
+  $("wScope").addEventListener("change", (e) => { ui.wScope = e.target.value; render(); });
+  $("wExportWages").addEventListener("click", exportWages);
+  $("wExportPnl").addEventListener("click", exportPnl);
+  $("wCopy").addEventListener("click", copySummary);
+  $("wTrend").addEventListener("click", (e) => { const tr = e.target.closest("tr[data-period]"); if (tr) { ui.wDate = tr.dataset.period; render(); window.scrollTo({ top: 0, behavior: "smooth" }); } });
+
+  $("cStatusSeg").addEventListener("click", (e) => { const b = e.target.closest("button[data-status]"); if (b) { ui.cStatus = b.dataset.status; render(); } });
+  $("cScope").addEventListener("change", (e) => { ui.cScope = e.target.value; render(); });
+  $("cSearch").addEventListener("input", (e) => { ui.cSearch = e.target.value; render(); });
+  $("cExport").addEventListener("click", exportClaims);
+  $("cTable").addEventListener("click", (e) => {
+    const ed = e.target.closest("[data-edit]"); if (ed) return startEdit(ed.dataset.edit);
+    const del = e.target.closest("[data-del]"); if (del) return deleteClaim(del, $("cMsg"));
+    if (e.target.closest("a")) return;
+    const tr = e.target.closest("tr[data-open]"); if (tr) { ui.detail = ui.detail === tr.dataset.open ? null : tr.dataset.open; render(); if (ui.detail) $("detail").scrollIntoView({ behavior: "smooth", block: "start" }); }
+  });
+  $("detail").addEventListener("click", (e) => {
+    const ed = e.target.closest("[data-edit]"); if (ed) return startEdit(ed.dataset.edit);
+    if (e.target.closest("[data-close-detail]")) { ui.detail = null; render(); }
+  });
+
+  $("fdForm").addEventListener("submit", submitFd);
+  $("xCancel").addEventListener("click", () => { resetFdForm(); setMsg($("xMsg"), ""); });
+  $("fdList").addEventListener("click", (e) => {
+    const ed = e.target.closest("[data-xedit]"); if (ed) return editFd(ed.dataset.xedit);
+    const del = e.target.closest("[data-xdel]"); if (del) return deleteFd(del);
+  });
+  $("drvForm").addEventListener("submit", submitDriver);
+  $("dCancel").addEventListener("click", () => { resetDriverForm(); setMsg($("dMsg"), ""); });
+  $("drvList").addEventListener("click", (e) => {
+    const ed = e.target.closest("[data-dedit]"); if (ed) return editDriver(ed.dataset.dedit);
+    const del = e.target.closest("[data-ddel]"); if (del) return deleteDriver(del);
+  });
+  $("rulesForm").addEventListener("submit", saveRules);
+
+  function setWritable(ok) {
+    S.canWrite = ok;
+    for (const id of ["saveBtn", "xSubmit", "dSubmit", "saveRules"]) $(id).disabled = !ok;
+    render();
+  }
+
+  function connect(db) {
+    S.db = db;
+    const slow = setTimeout(() => banner("The claims log can't be reached right now. Figures may be out of date."), 10000);
+    const stopped = () => { clearTimeout(slow); banner("The claims log stopped updating. Reload the page to reconnect."); };
+    const ok = () => { clearTimeout(slow); if (!S.local) banner(""); };
+    let firstSetup = true;
+    const maybeSetup = () => {
+      if (!firstSetup || !S.driversLoaded || !S.fdsLoaded || !S.claimsLoaded) return;
+      firstSetup = false;
+      if (!S.fds.length && !S.drivers.length && !S.claims.length) showTab("settings");
+    };
+    db.doc("settings/main").onSnapshot((snap) => {
+      S.settings = snap.exists ? { ...DEFAULT_SETTINGS, ...snap.data() } : { ...DEFAULT_SETTINGS };
+      fillRulesForm(); render();
+    }, () => {});
+    db.collection("fds").onSnapshot((snap) => { ok(); S.fds = snap.docs.map((d) => ({ id: d.id, ...d.data() })); S.fdsLoaded = true; S.rev++; maybeSetup(); render(); }, stopped);
+    db.collection("drivers").onSnapshot((snap) => { ok(); S.drivers = snap.docs.map((d) => ({ id: d.id, ...d.data() })); S.driversLoaded = true; S.rev++; maybeSetup(); render(); }, stopped);
+    db.collection("claims").onSnapshot((snap) => { ok(); S.claims = snap.docs.map((d) => ({ id: d.id, ...d.data() })); S.claimsLoaded = true; S.rev++; maybeSetup(); render(); }, stopped);
+    render();
+  }
+
+  // ---------- start ----------
+  fillRulesForm();
+  resetForm();
+  let startTab = "dashboard";
+  try { const t = localStorage.getItem("dc-tab"); if (t && $("tab-" + t)) startTab = t; } catch (_) {}
+  showTab(startTab);
+
+  (async () => {
+    const claude = window.claude;
+    if (!claude || !claude.use) {
+      S.local = true;
+      banner("Saved in this browser only. Open the published page on claude.ai to share the log across devices.");
+      return connect(localDb());
+    }
+    const [db, user, dl] = await Promise.all([claude.use("db"), claude.use("user"), claude.use("downloads")]);
+    S.dl = dl;
+    if (!db) { banner("Saving isn't available here. Open this page on claude.ai while signed in."); S.driversLoaded = S.fdsLoaded = S.claimsLoaded = true; setWritable(false); return; }
+    if (user) { try { if ((await user.can("data.write")) === false) { setWritable(false); banner("You can view this log but not change it."); } } catch (_) {} }
+    connect(db);
+  })();
+})();
+</script>
